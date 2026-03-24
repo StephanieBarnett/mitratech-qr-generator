@@ -1185,11 +1185,11 @@
         if (len > 120) {
             hint.style.display = 'block';
             hint.style.color = 'var(--orange)';
-            hint.innerHTML = len + ' chars &mdash; Very long URL. Consider a <strong>URL shortener</strong> (e.g. bit.ly) for better scanability at small sizes.';
+            hint.innerHTML = len + ' chars &mdash; Long URL produces a denser QR code. Use a larger print size for reliable scanning.';
         } else if (len > 70) {
             hint.style.display = 'block';
             hint.style.color = 'var(--text-dim)';
-            hint.innerHTML = len + ' chars &mdash; Moderate length. A shorter URL will produce a cleaner QR code.';
+            hint.innerHTML = len + ' chars';
         } else {
             hint.style.display = 'none';
         }
