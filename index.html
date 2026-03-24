@@ -794,6 +794,7 @@
                 <div class="field">
                     <label>URL to encode</label>
                     <input type="url" id="qr-url" placeholder="https://www.mitratech.com" value="https://www.mitratech.com">
+                    <div id="url-hint" style="font-size:0.72rem;margin-top:0.35rem;color:var(--text-dim);display:none;"></div>
                 </div>
                 <div class="field">
                     <label>QR Code Name (for download)</label>
@@ -916,8 +917,8 @@
                 <div class="field">
                     <label>Image Margin</label>
                     <div class="range-row">
-                        <input type="range" id="image-margin" min="0" max="20" step="1" value="5">
-                        <span class="range-val" id="image-margin-val">5px</span>
+                        <input type="range" id="image-margin" min="0" max="20" step="1" value="10">
+                        <span class="range-val" id="image-margin-val">10px</span>
                     </div>
                 </div>
             </div>
@@ -936,17 +937,17 @@
                 <div class="field">
                     <label>QR Code Size (px)</label>
                     <div class="range-row">
-                        <input type="range" id="qr-size" min="200" max="1200" step="50" value="600">
+                        <input type="range" id="qr-size" min="128" max="1200" step="1" value="600">
                         <span class="range-val" id="qr-size-val">600</span>
                     </div>
                 </div>
                 <div class="field">
                     <label>Error Correction</label>
                     <select id="error-correction">
-                        <option value="L">Low (7%)</option>
-                        <option value="M" selected>Medium (15%)</option>
-                        <option value="Q">Quartile (25%)</option>
-                        <option value="H">High (30%) &mdash; Best for logos</option>
+                        <option value="L">Low (7%) &mdash; Best for very long URLs</option>
+                        <option value="M">Medium (15%)</option>
+                        <option value="Q" selected>Quartile (25%) &mdash; Recommended</option>
+                        <option value="H">High (30%) &mdash; Best for logos &amp; damage recovery</option>
                     </select>
                 </div>
             </div>
@@ -1175,6 +1176,26 @@
         document.getElementById(id).addEventListener('input', generateQR);
         document.getElementById(id).addEventListener('change', generateQR);
     });
+
+    // ---- URL length hint ----
+    function updateUrlHint() {
+        const url = document.getElementById('qr-url').value;
+        const hint = document.getElementById('url-hint');
+        const len = url.length;
+        if (len > 120) {
+            hint.style.display = 'block';
+            hint.style.color = 'var(--orange)';
+            hint.innerHTML = len + ' chars &mdash; Very long URL. Consider a <strong>URL shortener</strong> (e.g. bit.ly) for better scanability at small sizes.';
+        } else if (len > 70) {
+            hint.style.display = 'block';
+            hint.style.color = 'var(--text-dim)';
+            hint.innerHTML = len + ' chars &mdash; Moderate length. A shorter URL will produce a cleaner QR code.';
+        } else {
+            hint.style.display = 'none';
+        }
+    }
+    document.getElementById('qr-url').addEventListener('input', updateUrlHint);
+    updateUrlHint();
 
     // ---- Filename display ----
     function updateFilename() {
