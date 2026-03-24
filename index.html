@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mitratech QR Code Generator</title>
+    <script src="https://unpkg.com/qr-code-styling@1.8.4/lib/qr-code-styling.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy: #001949;
+            --light-blue: #0ABFDC;
+            --orange: #ED5B3E;
+            --purple: #632D8A;
+            --magenta: #B21E80;
+            --light-orange: #FF8D1D;
+            --cobalt: #0067D2;
+            --bg-light: #F2F7FD;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-light);
+            color: var(--navy);
+            min-height: 100vh;
+        }
+
+        header {
+            background: var(--navy);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        header svg { flex-shrink: 0; }
+
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            opacity: 0.7;
+            margin-top: 0.2rem;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        .panel {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,25,73,0.08);
+        }
+
+        .panel h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--bg-light);
+        }
+
+        .field { margin-bottom: 1.25rem; }
+
+        .field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #667;
+            margin-bottom: 0.4rem;
+        }
+
+        .field input[type="text"],
+        .field input[type="url"] {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1.5px solid #dde;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color 0.15s;
+            outline: none;
+        }
+
+        .field input:focus { border-color: var(--cobalt); }
+
+        .field select {
+            width: 100%;
+            padding: 0.6rem 0.75rem;
+            border: 1.5px solid #dde;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .field select:focus { border-color: var(--cobalt); }
+
+        /* Color swatches */
+        .color-swatches {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.5rem;
+        }
+
+        .swatch {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 2.5px solid transparent;
+            cursor: pointer;
+            transition: border-color 0.15s, transform 0.1s;
+            position: relative;
+        }
+
+        .swatch:hover { transform: scale(1.1); }
+        .swatch.active { border-color: var(--navy); }
+
+        .swatch::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.6rem;
+            white-space: nowrap;
+            color: #667;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .swatch:hover::after { opacity: 1; }
+
+        .color-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .color-row input[type="color"] {
+            width: 36px;
+            height: 36px;
+            border: 1.5px solid #dde;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .color-row span {
+            font-size: 0.8rem;
+            color: #667;
+            font-family: monospace;
+        }
+
+        /* Center image */
+        .image-upload-area {
+            border: 2px dashed #dde;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.15s;
+            position: relative;
+        }
+
+        .image-upload-area:hover { border-color: var(--cobalt); }
+
+        .image-upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .image-upload-area p {
+            font-size: 0.85rem;
+            color: #667;
+        }
+
+        .image-upload-area .preview-thumb {
+            max-width: 60px;
+            max-height: 60px;
+            border-radius: 4px;
+            margin-top: 0.5rem;
+        }
+
+        .clear-image-btn {
+            display: inline-block;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--orange);
+            cursor: pointer;
+            border: none;
+            background: none;
+            text-decoration: underline;
+        }
+
+        /* Range slider */
+        .range-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .range-row input[type="range"] {
+            flex: 1;
+            accent-color: var(--cobalt);
+        }
+
+        .range-row .range-val {
+            font-size: 0.85rem;
+            font-family: monospace;
+            min-width: 2.5rem;
+            text-align: right;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.65rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.1s;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary {
+            background: var(--cobalt);
+            color: white;
+        }
+
+        .btn-primary:hover { background: #0055b0; }
+
+        .btn-secondary {
+            background: var(--navy);
+            color: white;
+        }
+
+        .btn-secondary:hover { background: #00245e; }
+
+        .btn-outline {
+            background: white;
+            color: var(--navy);
+            border: 1.5px solid #dde;
+        }
+
+        .btn-outline:hover { border-color: var(--cobalt); color: var(--cobalt); }
+
+        .actions {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1.5rem;
+        }
+
+        /* Preview panel */
+        .preview-panel { text-align: center; }
+
+        .preview-panel h2 { text-align: left; }
+
+        #qr-preview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 300px;
+            background: white;
+            border-radius: 8px;
+            border: 1.5px solid #eef;
+            margin-bottom: 1rem;
+            padding: 1.5rem;
+        }
+
+        #qr-preview canvas, #qr-preview svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .download-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .filename-display {
+            font-size: 0.8rem;
+            color: #667;
+            margin-bottom: 0.75rem;
+        }
+
+        /* Section divider */
+        .section-divider {
+            border: none;
+            border-top: 1px solid #eef;
+            margin: 1.25rem 0;
+        }
+
+        /* Checkbox row */
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            accent-color: var(--cobalt);
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-row label {
+            font-size: 0.85rem;
+            color: var(--navy);
+            text-transform: none;
+            letter-spacing: normal;
+            font-weight: 500;
+            margin-bottom: 0;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.75rem;
+            color: #99a;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+        <rect width="40" height="40" rx="8" fill="#0ABFDC"/>
+        <path d="M12 28L20 12L28 28H24L20 19L16 28H12Z" fill="white"/>
+    </svg>
+    <div>
+        <h1>Mitratech QR Code Generator</h1>
+        <p>Generate branded QR codes in Mitratech colors</p>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Controls Panel -->
+    <div class="panel">
+        <h2>Settings</h2>
+
+        <div class="field">
+            <label>URL</label>
+            <input type="url" id="qr-url" placeholder="https://www.mitratech.com" value="https://www.mitratech.com">
+        </div>
+
+        <div class="field">
+            <label>QR Code Name</label>
+            <input type="text" id="qr-name" placeholder="my-qr-code" value="mitratech-qr">
+        </div>
+
+        <hr class="section-divider">
+
+        <div class="field">
+            <label>Dot Color</label>
+            <div class="color-swatches" id="dot-color-swatches"></div>
+            <div class="color-row">
+                <input type="color" id="dot-color" value="#001949">
+                <span id="dot-color-hex">#001949</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Background Color</label>
+            <div class="color-swatches" id="bg-color-swatches"></div>
+            <div class="color-row">
+                <input type="color" id="bg-color" value="#FFFFFF">
+                <span id="bg-color-hex">#FFFFFF</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Corner Square Color</label>
+            <div class="checkbox-row" style="margin-bottom: 0.4rem;">
+                <input type="checkbox" id="corner-same" checked>
+                <label for="corner-same">Same as dot color</label>
+            </div>
+            <div id="corner-color-section" style="display:none;">
+                <div class="color-swatches" id="corner-color-swatches"></div>
+                <div class="color-row">
+                    <input type="color" id="corner-color" value="#001949">
+                    <span id="corner-color-hex">#001949</span>
+                </div>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <div class="field">
+            <label>Dot Style</label>
+            <select id="dot-style">
+                <option value="square">Square (Classic)</option>
+                <option value="dots">Dots (Rounded)</option>
+                <option value="rounded">Rounded Square</option>
+                <option value="extra-rounded">Extra Rounded</option>
+                <option value="classy">Classy</option>
+                <option value="classy-rounded">Classy Rounded</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Corner Square Style</label>
+            <select id="corner-square-style">
+                <option value="square">Square</option>
+                <option value="dot">Rounded</option>
+                <option value="extra-rounded">Extra Rounded</option>
+            </select>
+        </div>
+
+        <div class="field">
+            <label>Corner Dot Style</label>
+            <select id="corner-dot-style">
+                <option value="square">Square</option>
+                <option value="dot">Rounded</option>
+            </select>
+        </div>
+
+        <hr class="section-divider">
+
+        <div class="field">
+            <label>Center Image (optional)</label>
+            <div class="image-upload-area" id="image-upload-area">
+                <input type="file" id="center-image" accept="image/*">
+                <p id="upload-label">Click or drag to upload a logo</p>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Center Image Size</label>
+            <div class="range-row">
+                <input type="range" id="image-size" min="0.1" max="0.5" step="0.05" value="0.3">
+                <span class="range-val" id="image-size-val">0.3</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Image Margin (px)</label>
+            <div class="range-row">
+                <input type="range" id="image-margin" min="0" max="20" step="1" value="5">
+                <span class="range-val" id="image-margin-val">5</span>
+            </div>
+        </div>
+
+        <hr class="section-divider">
+
+        <div class="field">
+            <label>QR Code Size (px)</label>
+            <div class="range-row">
+                <input type="range" id="qr-size" min="200" max="1200" step="50" value="600">
+                <span class="range-val" id="qr-size-val">600</span>
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Error Correction</label>
+            <select id="error-correction">
+                <option value="L">Low (7%)</option>
+                <option value="M" selected>Medium (15%)</option>
+                <option value="Q">Quartile (25%)</option>
+                <option value="H">High (30%) - Best for logos</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Preview Panel -->
+    <div class="panel preview-panel" style="position: sticky; top: 2rem;">
+        <h2>Preview</h2>
+        <div id="qr-preview"></div>
+        <div class="filename-display">
+            Filename: <strong id="filename-display">mitratech-qr.png</strong>
+        </div>
+        <div class="download-actions">
+            <button class="btn btn-primary" onclick="downloadQR('png')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Download PNG
+            </button>
+            <button class="btn btn-secondary" onclick="downloadQR('svg')">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Download SVG
+            </button>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Mitratech QR Code Generator &mdash; Internal Tool
+</footer>
+
+<script>
+    // Mitratech brand colors
+    const brandColors = [
+        { hex: '#001949', label: 'Navy' },
+        { hex: '#0ABFDC', label: 'Light Blue' },
+        { hex: '#ED5B3E', label: 'Orange' },
+        { hex: '#632D8A', label: 'Purple' },
+        { hex: '#B21E80', label: 'Magenta' },
+        { hex: '#FF8D1D', label: 'Light Orange' },
+        { hex: '#0067D2', label: 'Cobalt' },
+        { hex: '#000000', label: 'Black' },
+    ];
+
+    const bgColors = [
+        { hex: '#FFFFFF', label: 'White' },
+        { hex: '#F2F7FD', label: 'Light Blue BG' },
+        { hex: '#EAFCFF', label: 'Aqua BG' },
+        { hex: '#F9FAFC', label: 'Light Gray BG' },
+        { hex: '#0ABFDC', label: 'Light Blue' },
+        { hex: '#001949', label: 'Navy' },
+    ];
+
+    let qrCode = null;
+    let centerImageData = null;
+
+    // Build swatches
+    function buildSwatches(containerId, colors, inputId, hexDisplayId) {
+        const container = document.getElementById(containerId);
+        colors.forEach(c => {
+            const s = document.createElement('div');
+            s.className = 'swatch';
+            s.style.background = c.hex;
+            s.setAttribute('data-label', c.label);
+            if (c.hex === '#FFFFFF') {
+                s.style.border = '2px solid #dde';
+            }
+            s.addEventListener('click', () => {
+                document.getElementById(inputId).value = c.hex;
+                document.getElementById(hexDisplayId).textContent = c.hex;
+                container.querySelectorAll('.swatch').forEach(sw => sw.classList.remove('active'));
+                s.classList.add('active');
+                generateQR();
+            });
+            container.appendChild(s);
+        });
+    }
+
+    buildSwatches('dot-color-swatches', brandColors, 'dot-color', 'dot-color-hex');
+    buildSwatches('bg-color-swatches', bgColors, 'bg-color', 'bg-color-hex');
+    buildSwatches('corner-color-swatches', brandColors, 'corner-color', 'corner-color-hex');
+
+    // Color inputs sync
+    ['dot', 'bg', 'corner'].forEach(prefix => {
+        const input = document.getElementById(prefix + '-color');
+        const hex = document.getElementById(prefix + '-color-hex');
+        input.addEventListener('input', () => {
+            hex.textContent = input.value.toUpperCase();
+            // Clear active swatch
+            const container = document.getElementById(prefix + '-color-swatches');
+            if (container) container.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+            generateQR();
+        });
+    });
+
+    // Corner same toggle
+    document.getElementById('corner-same').addEventListener('change', function() {
+        document.getElementById('corner-color-section').style.display = this.checked ? 'none' : 'block';
+        generateQR();
+    });
+
+    // Center image upload
+    document.getElementById('center-image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            centerImageData = ev.target.result;
+            const area = document.getElementById('image-upload-area');
+            document.getElementById('upload-label').textContent = file.name;
+            // Remove old preview/button
+            const oldImg = area.querySelector('.preview-thumb');
+            if (oldImg) oldImg.remove();
+            const oldBtn = area.querySelector('.clear-image-btn');
+            if (oldBtn) oldBtn.remove();
+            // Add preview
+            const img = document.createElement('img');
+            img.src = centerImageData;
+            img.className = 'preview-thumb';
+            area.appendChild(img);
+            // Add clear button
+            const btn = document.createElement('button');
+            btn.className = 'clear-image-btn';
+            btn.textContent = 'Remove image';
+            btn.onclick = function(ev) {
+                ev.stopPropagation();
+                centerImageData = null;
+                document.getElementById('center-image').value = '';
+                document.getElementById('upload-label').textContent = 'Click or drag to upload a logo';
+                img.remove();
+                btn.remove();
+                generateQR();
+            };
+            area.appendChild(btn);
+            generateQR();
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Range sliders
+    ['image-size', 'image-margin', 'qr-size'].forEach(id => {
+        const input = document.getElementById(id);
+        const val = document.getElementById(id + '-val');
+        input.addEventListener('input', () => {
+            val.textContent = input.value;
+            generateQR();
+        });
+    });
+
+    // All other inputs
+    ['qr-url', 'qr-name', 'dot-style', 'corner-square-style', 'corner-dot-style', 'error-correction'].forEach(id => {
+        document.getElementById(id).addEventListener('input', generateQR);
+        document.getElementById(id).addEventListener('change', generateQR);
+    });
+
+    // Update filename display
+    function updateFilename() {
+        const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
+        document.getElementById('filename-display').textContent = name + '.png';
+    }
+    document.getElementById('qr-name').addEventListener('input', updateFilename);
+
+    // Generate QR code
+    let debounceTimer = null;
+    function generateQR() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(_generateQR, 150);
+    }
+
+    function _generateQR() {
+        const url = document.getElementById('qr-url').value || 'https://www.mitratech.com';
+        const dotColor = document.getElementById('dot-color').value;
+        const bgColor = document.getElementById('bg-color').value;
+        const cornerSame = document.getElementById('corner-same').checked;
+        const cornerColor = cornerSame ? dotColor : document.getElementById('corner-color').value;
+        const dotStyle = document.getElementById('dot-style').value;
+        const cornerSquareStyle = document.getElementById('corner-square-style').value;
+        const cornerDotStyle = document.getElementById('corner-dot-style').value;
+        const size = parseInt(document.getElementById('qr-size').value);
+        const errorCorrection = document.getElementById('error-correction').value;
+        const imageSize = parseFloat(document.getElementById('image-size').value);
+        const imageMargin = parseInt(document.getElementById('image-margin').value);
+
+        const preview = document.getElementById('qr-preview');
+        preview.innerHTML = '';
+
+        const options = {
+            width: size,
+            height: size,
+            type: 'canvas',
+            data: url,
+            dotsOptions: {
+                color: dotColor,
+                type: dotStyle,
+            },
+            backgroundOptions: {
+                color: bgColor,
+            },
+            cornersSquareOptions: {
+                color: cornerColor,
+                type: cornerSquareStyle,
+            },
+            cornersDotOptions: {
+                color: cornerColor,
+                type: cornerDotStyle,
+            },
+            qrOptions: {
+                errorCorrectionLevel: errorCorrection,
+            },
+        };
+
+        if (centerImageData) {
+            options.image = centerImageData;
+            options.imageOptions = {
+                crossOrigin: 'anonymous',
+                margin: imageMargin,
+                imageSize: imageSize,
+            };
+        }
+
+        qrCode = new QRCodeStyling(options);
+        qrCode.append(preview);
+        updateFilename();
+    }
+
+    // Download
+    function downloadQR(format) {
+        if (!qrCode) return;
+        const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
+        qrCode.download({ name: name, extension: format });
+    }
+
+    // Initial render
+    generateQR();
+
+    // Set initial active swatch for dot color (Navy)
+    const dotSwatches = document.getElementById('dot-color-swatches').querySelectorAll('.swatch');
+    if (dotSwatches.length > 0) dotSwatches[0].classList.add('active');
+    // Set initial active swatch for bg color (White)
+    const bgSwatches = document.getElementById('bg-color-swatches').querySelectorAll('.swatch');
+    if (bgSwatches.length > 0) bgSwatches[0].classList.add('active');
+</script>
+
+</body>
+</html>
