@@ -1255,6 +1255,15 @@
                     Save
                 </button>
             </div>
+            <!-- QR Info accordion -->
+            <div style="margin-top:0.5rem;border-top:1px solid var(--border);padding-top:0.35rem;">
+                <button onclick="toggleQRInfo()" style="display:flex;align-items:center;gap:0.35rem;width:100%;background:none;border:none;cursor:pointer;padding:0.35rem 0;font-size:0.72rem;font-weight:600;color:var(--navy);">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    QR Info
+                    <svg id="qr-info-chevron" width="12" height="12" fill="none" stroke="var(--text-dim)" stroke-width="2" viewBox="0 0 24 24" style="margin-left:auto;transition:transform 0.2s;"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div id="qr-info-panel" style="display:none;font-size:0.72rem;color:var(--text-dim);padding:0.35rem 0 0.25rem;"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -1779,6 +1788,70 @@
         updateUrlHint();
     }
 
+    function toggleQRInfo() {
+        var panel = document.getElementById('qr-info-panel');
+        var chevron = document.getElementById('qr-info-chevron');
+        if (panel.style.display === 'none') {
+            updateQRInfoPanel();
+            panel.style.display = 'block';
+            chevron.style.transform = 'rotate(180deg)';
+        } else {
+            panel.style.display = 'none';
+            chevron.style.transform = '';
+        }
+    }
+
+    function updateQRInfoPanel() {
+        var panel = document.getElementById('qr-info-panel');
+        var url = document.getElementById('qr-url').value;
+        if (!url.trim()) { panel.innerHTML = '<div style="color:var(--text-dim);padding:0.25rem 0;">Enter a URL to see QR details.</div>'; return; }
+
+        var ecLevel = document.getElementById('error-correction').value;
+        var ecLabels = { L: 'Low (7%)', M: 'Medium (15%)', Q: 'Quartile (25%)', H: 'High (30%)' };
+        var dotStyle = document.getElementById('dot-style').value;
+        var dotColor = document.getElementById('dot-color').value;
+        var bgColor = document.getElementById('bg-color').value;
+        var cornerSame = document.getElementById('corner-same').checked;
+        var cornerColor = cornerSame ? dotColor : document.getElementById('corner-color').value;
+        var hasLogo = !!centerImageData;
+        var logoSizeVal = parseFloat(document.getElementById('image-size').value);
+        var logoSizeLabels = { 0.2: 'S', 0.3: 'M', 0.45: 'L' };
+        var logoLabel = logoSizeLabels[logoSizeVal] || (Math.round(logoSizeVal * 100) + '%');
+        var quietZone = parseInt(document.getElementById('quiet-zone').value) || 0;
+        var scanInfo = hasLogo ? getLogoScanInfo(logoSizeVal) : null;
+        var version = getQRVersion(url.length, ecLevel);
+        var modules = getModuleCount(version);
+        var minInches = getMinPrintInches(version);
+        var printSize = parseInt(document.getElementById('qr-size').value);
+        var printInches = printSize / 300;
+
+        var r = function(label, value, color) {
+            return '<tr><td style="padding:2px 6px 2px 0;font-weight:600;white-space:nowrap;color:var(--navy);">' + label + '</td>' +
+                '<td style="padding:2px 0;' + (color ? 'color:' + color + ';font-weight:600;' : '') + '">' + value + '</td></tr>';
+        };
+
+        var html = '<table style="width:100%;border-collapse:collapse;font-size:0.72rem;">';
+        html += r('URL', '<span style="word-break:break-all;">' + url + '</span> <span style="opacity:0.6;">(' + url.length + ' chars)</span>');
+        html += r('QR Version', 'V' + version + ' (' + modules + '&times;' + modules + ') · min ' + minInches.toFixed(1) + '&Prime;');
+        html += r('Print Size', printInches.toFixed(1) + '&Prime; (' + printSize + 'px at 300 DPI)');
+        html += r('Error Correction', ecLabels[ecLevel]);
+        html += r('Dot Style', dotStyle);
+        html += r('Colors', '<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + dotColor + ';vertical-align:middle;border:1px solid var(--border);"></span> ' + dotColor +
+            ' on <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + bgColor + ';vertical-align:middle;border:1px solid var(--border);"></span> ' + bgColor +
+            (cornerSame ? '' : ' · Corners: ' + cornerColor));
+        html += r('Logo', hasLogo ? logoLabel + ' — covers ' + scanInfo.coveragePct + '% of area' : 'None');
+        if (scanInfo) {
+            var sc = scanInfo.level === 'good' ? '#059669' : scanInfo.level === 'ok' ? '#B45309' : '#DC2626';
+            html += r('Scan Confidence', scanInfo.msg, sc);
+        }
+        if (printInches < minInches) {
+            html += r('WARNING', 'Print size (' + printInches.toFixed(1) + '&Prime;) is below minimum (' + minInches.toFixed(1) + '&Prime;)', '#DC2626');
+        }
+        html += r('Quiet Zone', quietZone + 'px');
+        html += '</table>';
+        panel.innerHTML = html;
+    }
+
     // ---- Sync name fields (left panel <-> right panel) ----
     const nameLeft = document.getElementById('qr-name');
     const nameRight = document.getElementById('qr-name-preview');
@@ -1870,6 +1943,7 @@
         updateFilename();
         updateSummary();
         updateLogoWarning();
+        if (document.getElementById('qr-info-panel').style.display !== 'none') updateQRInfoPanel();
     }
 
     // ---- Download ----
