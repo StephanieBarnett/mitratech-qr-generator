@@ -999,8 +999,11 @@
                     </div>
                     <p id="upload-label"><strong>Click to upload</strong> or drag and drop</p>
                 </div>
-                <div class="size-presets" id="image-size-presets" style="margin-top:0.5rem;"></div>
-                <input type="hidden" id="image-size" value="0.4">
+                <div id="image-size-section" style="margin-top:0.5rem;display:none;">
+                    <label style="font-size:0.72rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem;">Logo Size</label>
+                    <div class="size-presets" id="image-size-presets"></div>
+                </div>
+                <input type="hidden" id="image-size" value="0.3">
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label>Style Template</label>
@@ -1146,27 +1149,29 @@
                 </button>
                 <div class="section-body">
                     <div class="field">
-                        <label>Output Size (px)</label>
+                        <label>PNG Output Size (px)</label>
                         <div class="range-row">
-                            <input type="range" id="qr-size" min="128" max="2048" step="1" value="1024">
+                            <input type="range" id="qr-size" min="300" max="2048" step="1" value="1024">
                             <span class="range-val" id="qr-size-val">1024</span>
                         </div>
-                        <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.3rem;">PNG exports at this size. For print, use SVG (vector, infinite resolution).</div>
+                        <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.3rem;">
+                            300px = 1" at 300 DPI. For print, <strong>use SVG</strong> (scales to any size).
+                        </div>
                     </div>
                     <div class="field">
                         <label>Error Correction</label>
                         <select id="error-correction">
                             <option value="L">Low (7%) &mdash; Maximum data capacity</option>
-                            <option value="M">Medium (15%)</option>
+                            <option value="M" selected>Medium (15%)</option>
                             <option value="Q">Quartile (25%)</option>
-                            <option value="H" selected>High (30%) &mdash; Best for print &amp; logos</option>
+                            <option value="H">High (30%) &mdash; Best for print &amp; logos</option>
                         </select>
                     </div>
                     <div class="field">
                         <label>Quiet Zone (margin around QR)</label>
                         <div class="range-row">
-                            <input type="range" id="quiet-zone" min="0" max="40" step="1" value="16">
-                            <span class="range-val" id="quiet-zone-val">16px</span>
+                            <input type="range" id="quiet-zone" min="0" max="40" step="1" value="10">
+                            <span class="range-val" id="quiet-zone-val">10px</span>
                         </div>
                         <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.3rem;">Whitespace border required by scanners. Minimum 8px recommended.</div>
                     </div>
@@ -1397,6 +1402,7 @@
             img.src = centerImageData;
             img.className = 'preview-thumb';
             area.appendChild(img);
+            document.getElementById('image-size-section').style.display = '';
             const btn = document.createElement('button');
             btn.className = 'clear-image-btn';
             btn.textContent = 'Remove image';
@@ -1408,6 +1414,7 @@
                 document.getElementById('upload-label').innerHTML = '<strong>Click to upload</strong> or drag and drop';
                 img.remove();
                 btn.remove();
+                document.getElementById('image-size-section').style.display = 'none';
                 generateQR();
             };
             area.appendChild(btn);
@@ -1441,7 +1448,7 @@
         if (len > 120) {
             hint.style.display = 'block';
             hint.style.color = 'var(--orange)';
-            hint.innerHTML = len + ' chars &mdash; Long URL produces a denser QR code. Use a larger print size for reliable scanning.';
+            hint.innerHTML = len + ' chars &mdash; Long URL. May need larger than 1&Prime;&times;1&Prime; print for reliable scanning.';
         } else if (len > 70) {
             hint.style.display = 'block';
             hint.style.color = 'var(--text-dim)';
@@ -1674,12 +1681,12 @@
         document.getElementById('corner-dot-style').value = config.cornerDotStyle || 'square';
         document.getElementById('qr-size').value = config.qrSize || '600';
         document.getElementById('qr-size-val').textContent = config.qrSize || '600';
-        document.getElementById('error-correction').value = config.errorCorrection || 'H';
-        document.getElementById('quiet-zone').value = config.quietZone || '16';
-        document.getElementById('quiet-zone-val').textContent = (config.quietZone || '16') + 'px';
-        document.getElementById('image-size').value = config.imageSize || '0.4';
+        document.getElementById('error-correction').value = config.errorCorrection || 'M';
+        document.getElementById('quiet-zone').value = config.quietZone || '10';
+        document.getElementById('quiet-zone-val').textContent = (config.quietZone || '10') + 'px';
+        document.getElementById('image-size').value = config.imageSize || '0.3';
         // Sync image size presets
-        const imgVal = parseFloat(config.imageSize || '0.4');
+        const imgVal = parseFloat(config.imageSize || '0.3');
         document.getElementById('image-size-presets').querySelectorAll('.size-preset').forEach((btn, i) => {
             btn.classList.toggle('active', imageSizePresets[i].value === imgVal);
         });
@@ -1714,6 +1721,7 @@
             img.src = centerImageData;
             img.className = 'preview-thumb';
             area.appendChild(img);
+            document.getElementById('image-size-section').style.display = '';
             const btn = document.createElement('button');
             btn.className = 'clear-image-btn';
             btn.textContent = 'Remove image';
@@ -1725,12 +1733,14 @@
                 document.getElementById('upload-label').innerHTML = '<strong>Click to upload</strong> or drag and drop';
                 img.remove();
                 btn.remove();
+                document.getElementById('image-size-section').style.display = 'none';
                 generateQR();
             };
             area.appendChild(btn);
         } else {
             area.classList.remove('has-image');
             document.getElementById('upload-label').innerHTML = '<strong>Click to upload</strong> or drag and drop';
+            document.getElementById('image-size-section').style.display = 'none';
         }
 
         document.querySelectorAll('.swatch.active').forEach(s => s.classList.remove('active'));
@@ -1848,11 +1858,11 @@
                 backgroundOptions: { color: c.bgColor || '#FFFFFF' },
                 cornersSquareOptions: { color: cc, type: c.cornerSquareStyle || 'square' },
                 cornersDotOptions: { color: cc, type: c.cornerDotStyle || 'square' },
-                qrOptions: { errorCorrectionLevel: c.errorCorrection || 'H' },
+                qrOptions: { errorCorrectionLevel: c.errorCorrection || 'M' },
             };
             if (c.centerImage) {
                 thumbOpts.image = c.centerImage;
-                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 10, imageSize: parseFloat(c.imageSize) || 0.4 };
+                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 10, imageSize: parseFloat(c.imageSize) || 0.3 };
             }
             new QRCodeStyling(thumbOpts).append(thumb);
 
