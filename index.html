@@ -1028,12 +1028,12 @@
         <div class="panel-body" style="padding-bottom:0.75rem;">
             <div class="field">
                 <label>URL to encode</label>
-                <input type="url" id="qr-url" placeholder="https://www.mitratech.com" value="https://www.mitratech.com">
+                <input type="url" id="qr-url" placeholder="https://www.mitratech.com" value="">
                 <div id="url-hint" style="font-size:0.72rem;margin-top:0.35rem;color:var(--text-dim);display:none;"></div>
             </div>
             <div class="field">
                 <label>QR Code Name</label>
-                <input type="text" id="qr-name" placeholder="my-qr-code" value="mitratech-qr">
+                <input type="text" id="qr-name" placeholder="my-qr-code" value="">
             </div>
             <div class="field">
                 <label>Center Image (optional)</label>
@@ -1233,7 +1233,7 @@
         <div class="preview-actions">
             <div class="field" style="margin-bottom:0.75rem;">
                 <label style="font-size:0.7rem;text-align:center;">Filename</label>
-                <input type="text" id="qr-name-preview" value="mitratech-qr" placeholder="my-qr-code" style="text-align:center;font-size:0.85rem;padding:0.5rem 0.75rem;">
+                <input type="text" id="qr-name-preview" value="" placeholder="my-qr-code" style="text-align:center;font-size:0.85rem;padding:0.5rem 0.75rem;">
             </div>
             <button class="btn btn-primary" onclick="downloadQR('svg')" style="width:100%;" title="Vector — scales to any size in Illustrator">
                 <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
@@ -1306,6 +1306,7 @@
         { hex: '#B21E80', label: 'Magenta' },
         { hex: '#FF8D1D', label: 'Light Orange' },
         { hex: '#0067D2', label: 'Cobalt' },
+        { hex: '#FFFFFF', label: 'White' },
     ];
 
     const bgColors = [
@@ -1440,6 +1441,16 @@
                 document.getElementById(hexDisplayId).textContent = c.hex;
                 container.querySelectorAll('.swatch').forEach(sw => sw.classList.remove('active'));
                 s.classList.add('active');
+                // Auto-swap background to black if dot color is set to white and bg is also white
+                if (inputId === 'dot-color' && c.hex.toUpperCase() === '#FFFFFF') {
+                    const bgVal = document.getElementById('bg-color').value.toUpperCase();
+                    if (bgVal === '#FFFFFF') {
+                        document.getElementById('bg-color').value = '#000000';
+                        document.getElementById('bg-color-hex').textContent = '#000000';
+                        const bgContainer = document.getElementById('bg-color-swatches');
+                        if (bgContainer) bgContainer.querySelectorAll('.swatch').forEach(sw => sw.classList.remove('active'));
+                    }
+                }
                 generateQR();
             });
             container.appendChild(s);
@@ -1458,6 +1469,16 @@
             hex.textContent = input.value.toUpperCase();
             const container = document.getElementById(prefix + '-color-swatches');
             if (container) container.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+            // Auto-swap background to black if dot color is set to white and bg is also white
+            if (prefix === 'dot' && input.value.toUpperCase() === '#FFFFFF') {
+                const bgVal = document.getElementById('bg-color').value.toUpperCase();
+                if (bgVal === '#FFFFFF') {
+                    document.getElementById('bg-color').value = '#000000';
+                    document.getElementById('bg-color-hex').textContent = '#000000';
+                    const bgContainer = document.getElementById('bg-color-swatches');
+                    if (bgContainer) bgContainer.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+                }
+            }
             generateQR();
         });
     });
@@ -1475,6 +1496,7 @@
         const reader = new FileReader();
         reader.onload = function(ev) {
             centerImageData = ev.target.result;
+            document.getElementById('error-correction').value = 'Q';
             const area = document.getElementById('image-upload-area');
             area.classList.add('has-image');
             const label = document.getElementById('upload-label');
@@ -1553,7 +1575,6 @@
         { id: '_rounded', name: 'Rounded', builtin: true, style: { dotColor: '#000000', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#000000', dotStyle: 'dots', cornerSquareStyle: 'dot', cornerDotStyle: 'dot' } },
         { id: '_navy', name: 'Navy', builtin: true, style: { dotColor: '#001949', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#001949', dotStyle: 'square', cornerSquareStyle: 'square', cornerDotStyle: 'square' } },
         { id: '_brand_round', name: 'Navy Round', builtin: true, style: { dotColor: '#001949', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#001949', dotStyle: 'dots', cornerSquareStyle: 'dot', cornerDotStyle: 'dot' } },
-        { id: '_cobalt_classy', name: 'Cobalt Classy', builtin: true, style: { dotColor: '#0067D2', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#0067D2', dotStyle: 'classy-rounded', cornerSquareStyle: 'extra-rounded', cornerDotStyle: 'dot' } },
     ];
 
     function getCustomTemplates() {
@@ -1617,6 +1638,7 @@
     }
 
     function deleteTemplate(id) {
+        if (!confirm('Are you sure you want to delete this template?')) return;
         setCustomTemplates(getCustomTemplates().filter(t => t.id !== id));
         renderTemplates();
         showToast('Template removed');
@@ -1700,7 +1722,12 @@
 
         if (centerImageData) {
             options.image = centerImageData;
-            options.imageOptions = { crossOrigin: 'anonymous', margin: imageMargin, imageSize: imageSize };
+            options.imageOptions = { crossOrigin: 'anonymous', margin: imageMargin, imageSize: imageSize, hideBackgroundDots: true };
+            // Auto-bump error correction from L to M when a logo is present,
+            // since low error correction with a center image will likely be unscannable
+            if (errorCorrection === 'L') {
+                options.qrOptions.errorCorrectionLevel = 'M';
+            }
         }
         return options;
     }
@@ -1708,6 +1735,19 @@
     function _generateQR() {
         const preview = document.getElementById('qr-preview');
         preview.innerHTML = '';
+
+        // Show placeholder if URL is empty
+        if (!document.getElementById('qr-url').value.trim()) {
+            qrCode = null;
+            preview.innerHTML = '<div style="text-align:center;color:#94A3B8;padding:2rem;">' +
+                '<svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 0.75rem;display:block;opacity:0.4;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg>' +
+                '<div style="font-size:0.85rem;font-weight:600;">Enter a URL to generate</div>' +
+                '<div style="font-size:0.75rem;margin-top:0.25rem;">Paste a link above to preview your QR code</div>' +
+                '</div>';
+            updateFilename();
+            updateSummary();
+            return;
+        }
 
         // Preview always renders at 400px for consistent display
         const previewQR = new QRCodeStyling(getQROptions(400));
@@ -1721,6 +1761,7 @@
 
     // ---- Download ----
     function downloadQR(format) {
+        if (!document.getElementById('qr-url').value.trim()) { showToast('Please enter a URL first'); return; }
         if (!qrCode) return;
         // Rebuild at export size to ensure fresh render
         qrCode = new QRCodeStyling(getQROptions());
@@ -1730,6 +1771,7 @@
 
     // ---- Test Print at exact physical size ----
     function testPrint() {
+        if (!document.getElementById('qr-url').value.trim()) { showToast('Please enter a URL first'); return; }
         const size = parseInt(document.getElementById('qr-size').value);
         const inches = size / 300;
         const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
@@ -1892,6 +1934,7 @@
     function saveCurrentQR() {
         const config = getCurrentConfig();
         if (!config.url) { showToast('Please enter a URL first'); return; }
+        if (!document.getElementById('qr-name').value.trim()) { showToast('Please enter a QR code name'); return; }
         const saved = getSaved();
         saved.unshift({
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -1919,7 +1962,7 @@
         };
         if (c.centerImage) {
             opts.image = c.centerImage;
-            opts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.9 };
+            opts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.9, hideBackgroundDots: true };
         }
         const dlQR = new QRCodeStyling(opts);
         dlQR.download({ name: c.name || 'mitratech-qr', extension: format });
@@ -2027,7 +2070,7 @@
             };
             if (c.centerImage) {
                 thumbOpts.image = c.centerImage;
-                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.9 };
+                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.9, hideBackgroundDots: true };
             }
             new QRCodeStyling(thumbOpts).append(thumb);
 
