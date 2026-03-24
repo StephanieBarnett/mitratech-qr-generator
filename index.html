@@ -207,6 +207,11 @@
             background: #FAFBFC;
         }
 
+        .field input::placeholder {
+            color: #C4CDD5;
+            opacity: 1;
+        }
+
         .field input[type="text"]:focus,
         .field input[type="url"]:focus {
             border-color: var(--cobalt);
@@ -1028,7 +1033,7 @@
         <div class="panel-body" style="padding-bottom:0.75rem;">
             <div class="field">
                 <label>URL to encode</label>
-                <input type="url" id="qr-url" placeholder="https://www.mitratech.com" value="">
+                <input type="url" id="qr-url" placeholder="https://www.example.com" value="">
                 <div id="url-hint" style="font-size:0.72rem;margin-top:0.35rem;color:var(--text-dim);display:none;"></div>
             </div>
             <div class="field">
