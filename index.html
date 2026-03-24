@@ -137,13 +137,13 @@
         .section-toggle {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.6rem;
             width: 100%;
-            padding: 1rem 1.5rem;
+            padding: 0.7rem 1.25rem;
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-weight: 600;
             color: var(--navy);
             text-align: left;
@@ -153,16 +153,16 @@
         .section-toggle:hover { background: var(--bg-light); }
 
         .section-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
 
-        .section-icon svg { width: 16px; height: 16px; }
+        .section-icon svg { width: 14px; height: 14px; }
 
         .section-icon.blue { background: #E0F4F9; color: var(--light-blue); }
         .section-icon.purple { background: #F0E6F6; color: var(--purple); }
@@ -179,10 +179,10 @@
         .section.collapsed .section-chevron { transform: rotate(-90deg); }
         .section.collapsed .section-body { display: none; }
 
-        .section-body { padding: 0 1.5rem 1.25rem; }
+        .section-body { padding: 0 1.25rem 1rem; }
 
         /* ---- Fields ---- */
-        .field { margin-bottom: 1rem; }
+        .field { margin-bottom: 0.75rem; }
         .field:last-child { margin-bottom: 0; }
 
         .field label {
@@ -347,6 +347,49 @@
         }
 
         .style-option.active span { color: var(--cobalt); }
+
+        /* ---- Size presets ---- */
+        .size-presets {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+        }
+
+        .size-preset {
+            flex: 1;
+            min-width: 0;
+            padding: 0.5rem 0.25rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            background: #FAFBFC;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .size-preset:hover { border-color: var(--border-hover); background: white; }
+
+        .size-preset.active {
+            border-color: var(--cobalt);
+            background: #EFF6FF;
+            box-shadow: 0 0 0 2px rgba(0,103,210,0.15);
+        }
+
+        .size-preset .preset-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--navy);
+            display: block;
+        }
+
+        .size-preset.active .preset-label { color: var(--cobalt); }
+
+        .size-preset .preset-desc {
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            display: block;
+            margin-top: 0.1rem;
+        }
 
         /* ---- Image upload ---- */
         .image-upload-area {
@@ -912,10 +955,8 @@
                 </div>
                 <div class="field">
                     <label>Image Size</label>
-                    <div class="range-row">
-                        <input type="range" id="image-size" min="0.1" max="0.5" step="0.05" value="0.3">
-                        <span class="range-val" id="image-size-val">0.3</span>
-                    </div>
+                    <div class="size-presets" id="image-size-presets"></div>
+                    <input type="hidden" id="image-size" value="0.4">
                 </div>
                 <div class="field">
                     <label>Image Margin</label>
@@ -1097,6 +1138,31 @@
     buildStyleGrid('corner-square-style-grid', 'corner-square-style', cornerSquareIcons);
     buildStyleGrid('corner-dot-style-grid', 'corner-dot-style', cornerDotIcons);
 
+    // ---- Image size presets ----
+    const imageSizePresets = [
+        { value: 0.2, label: 'Small', desc: '20%' },
+        { value: 0.3, label: 'Medium', desc: '30%' },
+        { value: 0.4, label: 'Large', desc: '40%' },
+        { value: 0.5, label: 'X-Large', desc: '50%' },
+    ];
+
+    (function buildImageSizePresets() {
+        const container = document.getElementById('image-size-presets');
+        const input = document.getElementById('image-size');
+        imageSizePresets.forEach(p => {
+            const btn = document.createElement('div');
+            btn.className = 'size-preset' + (parseFloat(input.value) === p.value ? ' active' : '');
+            btn.innerHTML = '<span class="preset-label">' + p.label + '</span><span class="preset-desc">' + p.desc + '</span>';
+            btn.addEventListener('click', () => {
+                input.value = p.value;
+                container.querySelectorAll('.size-preset').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                generateQR();
+            });
+            container.appendChild(btn);
+        });
+    })();
+
     // ---- Build color swatches ----
     function buildSwatches(containerId, colors, inputId, hexDisplayId) {
         const container = document.getElementById(containerId);
@@ -1177,7 +1243,7 @@
     });
 
     // ---- Range sliders ----
-    ['image-size', 'image-margin', 'qr-size', 'quiet-zone'].forEach(id => {
+    ['image-margin', 'qr-size', 'quiet-zone'].forEach(id => {
         const input = document.getElementById(id);
         const val = document.getElementById(id + '-val');
         if (!input || !val) return;
@@ -1324,8 +1390,12 @@
         document.getElementById('error-correction').value = config.errorCorrection || 'H';
         document.getElementById('quiet-zone').value = config.quietZone || '16';
         document.getElementById('quiet-zone-val').textContent = (config.quietZone || '16') + 'px';
-        document.getElementById('image-size').value = config.imageSize || '0.3';
-        document.getElementById('image-size-val').textContent = config.imageSize || '0.3';
+        document.getElementById('image-size').value = config.imageSize || '0.4';
+        // Sync image size presets
+        const imgVal = parseFloat(config.imageSize || '0.4');
+        document.getElementById('image-size-presets').querySelectorAll('.size-preset').forEach((btn, i) => {
+            btn.classList.toggle('active', imageSizePresets[i].value === imgVal);
+        });
         document.getElementById('image-margin').value = config.imageMargin || '5';
         document.getElementById('image-margin-val').textContent = (config.imageMargin || '5') + 'px';
 
