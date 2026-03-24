@@ -456,12 +456,16 @@
             font-size: 0.75rem;
             color: var(--orange);
             cursor: pointer;
-            border: none;
-            background: none;
+            border: 1.5px solid var(--orange);
+            background: white;
             font-weight: 600;
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+            position: relative;
+            z-index: 10;
         }
 
-        .clear-image-btn:hover { text-decoration: underline; }
+        .clear-image-btn:hover { background: var(--orange); color: white; }
 
         /* ---- Range slider ---- */
         .range-row {
