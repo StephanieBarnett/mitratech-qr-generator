@@ -1256,13 +1256,13 @@
                 </button>
             </div>
             <!-- QR Info accordion -->
-            <div style="margin-top:0.5rem;border-top:1px solid var(--border);padding-top:0.35rem;">
-                <button onclick="toggleQRInfo()" style="display:flex;align-items:center;gap:0.35rem;width:100%;background:none;border:none;cursor:pointer;padding:0.35rem 0;font-size:0.72rem;font-weight:600;color:var(--navy);">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-                    QR Info
+            <div style="margin-top:0.75rem;background:var(--bg-light);border-radius:var(--radius);border:1px solid var(--border);padding:0.1rem 0.75rem;">
+                <button onclick="toggleQRInfo()" style="display:flex;align-items:center;gap:0.4rem;width:100%;background:none;border:none;cursor:pointer;padding:0.5rem 0;font-size:0.75rem;font-weight:700;color:var(--navy);">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                    QR Info &amp; Scan Details
                     <svg id="qr-info-chevron" width="12" height="12" fill="none" stroke="var(--text-dim)" stroke-width="2" viewBox="0 0 24 24" style="margin-left:auto;transition:transform 0.2s;"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
-                <div id="qr-info-panel" style="display:none;font-size:0.72rem;color:var(--text-dim);padding:0.35rem 0 0.25rem;"></div>
+                <div id="qr-info-panel" style="display:none;padding:0 0 0.5rem;"></div>
             </div>
         </div>
     </div>
