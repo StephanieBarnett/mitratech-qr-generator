@@ -1274,6 +1274,7 @@
                     <input type="file" accept=".json" onchange="importSaved(event)" style="display:none;">
                 </label>
                 <button class="btn btn-outline btn-sm" id="bulk-select-btn" onclick="toggleBulkSelect()">Select</button>
+                <button class="btn btn-outline btn-sm hidden" id="bulk-select-all-btn" onclick="selectAllVisible()">Select All</button>
                 <button class="btn btn-danger btn-sm hidden" id="bulk-delete-btn" onclick="bulkDeleteSaved()">Delete Selected</button>
                 <button class="btn btn-danger btn-sm" onclick="clearAllSaved()">Delete All</button>
             </div>
@@ -2101,16 +2102,18 @@
         const panel = document.getElementById('saved-section').querySelector('.panel');
         const btn = document.getElementById('bulk-select-btn');
         const delBtn = document.getElementById('bulk-delete-btn');
+        const selAllBtn = document.getElementById('bulk-select-all-btn');
         if (bulkMode) {
             panel.classList.add('bulk-mode');
             btn.textContent = 'Cancel';
             btn.className = 'btn btn-outline btn-sm';
             delBtn.classList.remove('hidden');
+            selAllBtn.classList.remove('hidden');
         } else {
             panel.classList.remove('bulk-mode');
             btn.textContent = 'Select';
             delBtn.classList.add('hidden');
-            // Uncheck all
+            selAllBtn.classList.add('hidden');
             panel.querySelectorAll('.saved-card-check').forEach(cb => cb.checked = false);
         }
         updateBulkDeleteBtn();
@@ -2120,6 +2123,14 @@
         const checked = document.querySelectorAll('.saved-card-check:checked').length;
         const btn = document.getElementById('bulk-delete-btn');
         btn.textContent = checked > 0 ? 'Delete ' + checked + ' Selected' : 'Delete Selected';
+    }
+
+    function selectAllVisible() {
+        const cbs = document.querySelectorAll('.saved-card-check');
+        const allChecked = [...cbs].every(cb => cb.checked);
+        cbs.forEach(cb => cb.checked = !allChecked);
+        document.getElementById('bulk-select-all-btn').textContent = allChecked ? 'Select All' : 'Deselect All';
+        updateBulkDeleteBtn();
     }
 
     function bulkDeleteSaved() {
