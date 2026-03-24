@@ -1604,14 +1604,7 @@
         if (!len) { hint.style.display = 'none'; return; }
 
         const hasLogo = !!centerImageData;
-        // Determine the effective EC level (same logic as getQROptions)
-        var ecLevel = document.getElementById('error-correction').value;
-        if (hasLogo) {
-            const imgSize = parseFloat(document.getElementById('image-size').value);
-            const scanInfo = getLogoScanInfo(imgSize);
-            const ecRank = { L: 0, M: 1, Q: 2, H: 3 };
-            if (ecRank[scanInfo.ec] > ecRank[ecLevel]) ecLevel = scanInfo.ec;
-        }
+        var ecLevel = document.getElementById('error-correction').value; // already bumped by syncECForLogo
 
         const version = getQRVersion(len, ecLevel);
         const modules = getModuleCount(version);
@@ -1764,8 +1757,7 @@
         if (!centerImageData) { el.style.display = 'none'; updateUrlHint(); return; }
         const imageSize = parseFloat(document.getElementById('image-size').value);
         const info = getLogoScanInfo(imageSize);
-        const opts = getQROptions(400);
-        const effectiveEC = opts.qrOptions.errorCorrectionLevel;
+        const effectiveEC = document.getElementById('error-correction').value; // already bumped by syncECForLogo
         const ecLabels = { L: 'Low 7%', M: 'Med 15%', Q: 'Quartile 25%', H: 'High 30%' };
         const styles = {
             good: 'color:#059669;background:#ECFDF5;',
@@ -1774,10 +1766,10 @@
             bad:  'color:#DC2626;background:#FEF2F2;'
         };
         el.style.cssText = 'display:block;font-size:0.72rem;padding:0.5rem 0.75rem;margin:0.5rem 1rem 0;border-radius:6px;text-align:center;font-weight:600;' + styles[info.level];
-        el.innerHTML = 'Logo covers ' + info.coveragePct + '% of QR area · EC auto-set to ' + ecLabels[effectiveEC] +
+        el.innerHTML = 'Logo covers ' + info.coveragePct + '% of QR area · EC: ' + ecLabels[effectiveEC] +
             (info.level === 'warn' ? '<br>Borderline — test scan before printing' : '') +
             (info.level === 'bad' ? '<br>Too large to scan reliably — reduce logo size' : '');
-        updateUrlHint(); // recalc URL hint since EC level may have changed
+        updateUrlHint();
     }
 
     // ---- Sync name fields (left panel <-> right panel) ----
@@ -1823,20 +1815,29 @@
         if (centerImageData) {
             options.image = centerImageData;
             options.imageOptions = { crossOrigin: 'anonymous', margin: imageMargin, imageSize: imageSize, hideBackgroundDots: true };
-            // Auto-bump error correction based on actual logo area coverage.
-            // The logo destroys data modules it covers — EC must be able to recover them.
-            const scanInfo = getLogoScanInfo(imageSize);
-            const ecRank = { L: 0, M: 1, Q: 2, H: 3 };
-            if (ecRank[scanInfo.ec] > ecRank[errorCorrection]) {
-                options.qrOptions.errorCorrectionLevel = scanInfo.ec;
-            }
         }
         return options;
+    }
+
+    // Auto-bump the EC dropdown when a logo requires higher correction.
+    // Updates the actual <select> so the user sees the effective level.
+    function syncECForLogo() {
+        if (!centerImageData) return;
+        const ecSelect = document.getElementById('error-correction');
+        const imageSize = parseFloat(document.getElementById('image-size').value);
+        const scanInfo = getLogoScanInfo(imageSize);
+        const ecRank = { L: 0, M: 1, Q: 2, H: 3 };
+        if (ecRank[scanInfo.ec] > ecRank[ecSelect.value]) {
+            ecSelect.value = scanInfo.ec;
+        }
     }
 
     function _generateQR() {
         const preview = document.getElementById('qr-preview');
         preview.innerHTML = '';
+
+        // Auto-bump EC dropdown before building QR
+        syncECForLogo();
 
         // Show placeholder if URL is empty
         if (!document.getElementById('qr-url').value.trim()) {
