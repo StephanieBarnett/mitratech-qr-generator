@@ -1000,10 +1000,11 @@
                     <p id="upload-label"><strong>Click to upload</strong> or drag and drop</p>
                 </div>
                 <div id="image-size-section" style="margin-top:0.5rem;display:none;">
-                    <label style="font-size:0.72rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem;">Logo Size</label>
+                    <label style="font-size:0.72rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.25rem;">Center Logo Size</label>
+                    <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:0.4rem;">Percentage of the total QR code area used by the logo</div>
                     <div class="size-presets" id="image-size-presets"></div>
                 </div>
-                <input type="hidden" id="image-size" value="0.3">
+                <input type="hidden" id="image-size" value="0.4">
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label>Style Template</label>
@@ -1322,10 +1323,10 @@
 
     // ---- Image size presets ----
     const imageSizePresets = [
-        { value: 0.2, label: 'Small', desc: '20%' },
-        { value: 0.3, label: 'Medium', desc: '30%' },
-        { value: 0.4, label: 'Large', desc: '40%' },
-        { value: 0.5, label: 'X-Large', desc: '50%' },
+        { value: 0.25, label: '25%', desc: 'Subtle' },
+        { value: 0.35, label: '35%', desc: 'Medium' },
+        { value: 0.40, label: '40%', desc: 'Standard' },
+        { value: 0.50, label: '50%', desc: 'Large' },
     ];
 
     (function buildImageSizePresets() {
@@ -1334,7 +1335,12 @@
         imageSizePresets.forEach(p => {
             const btn = document.createElement('div');
             btn.className = 'size-preset' + (parseFloat(input.value) === p.value ? ' active' : '');
-            btn.innerHTML = '<span class="preset-label">' + p.label + '</span><span class="preset-desc">' + p.desc + '</span>';
+            // Visual indicator: a box inside a box showing relative size
+            const outerPx = 28;
+            const innerPx = Math.round(outerPx * p.value);
+            btn.innerHTML = '<div style="width:' + outerPx + 'px;height:' + outerPx + 'px;background:var(--bg-light);border-radius:3px;display:flex;align-items:center;justify-content:center;margin:0 auto 0.2rem;">' +
+                '<div style="width:' + innerPx + 'px;height:' + innerPx + 'px;background:var(--cobalt);border-radius:2px;opacity:0.6;"></div></div>' +
+                '<span class="preset-label">' + p.label + '</span><span class="preset-desc">' + p.desc + '</span>';
             btn.addEventListener('click', () => {
                 input.value = p.value;
                 container.querySelectorAll('.size-preset').forEach(b => b.classList.remove('active'));
@@ -1766,9 +1772,9 @@
         document.getElementById('error-correction').value = config.errorCorrection || 'M';
         document.getElementById('quiet-zone').value = config.quietZone || '10';
         document.getElementById('quiet-zone-val').textContent = (config.quietZone || '10') + 'px';
-        document.getElementById('image-size').value = config.imageSize || '0.3';
+        document.getElementById('image-size').value = config.imageSize || '0.4';
         // Sync image size presets
-        const imgVal = parseFloat(config.imageSize || '0.3');
+        const imgVal = parseFloat(config.imageSize || '0.4');
         document.getElementById('image-size-presets').querySelectorAll('.size-preset').forEach((btn, i) => {
             btn.classList.toggle('active', imageSizePresets[i].value === imgVal);
         });
@@ -1944,7 +1950,7 @@
             };
             if (c.centerImage) {
                 thumbOpts.image = c.centerImage;
-                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 10, imageSize: parseFloat(c.imageSize) || 0.3 };
+                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 10, imageSize: parseFloat(c.imageSize) || 0.4 };
             }
             new QRCodeStyling(thumbOpts).append(thumb);
 
