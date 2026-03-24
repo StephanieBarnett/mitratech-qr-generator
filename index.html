@@ -1000,11 +1000,10 @@
                     <p id="upload-label"><strong>Click to upload</strong> or drag and drop</p>
                 </div>
                 <div id="image-size-section" style="margin-top:0.5rem;display:none;">
-                    <label style="font-size:0.72rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.25rem;">Center Logo Size</label>
-                    <div style="font-size:0.65rem;color:var(--text-dim);margin-bottom:0.4rem;">Percentage of the total QR code area used by the logo</div>
+                    <label style="font-size:0.72rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem;">Center Logo Size</label>
                     <div class="size-presets" id="image-size-presets"></div>
                 </div>
-                <input type="hidden" id="image-size" value="0.4">
+                <input type="hidden" id="image-size" value="0.5">
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label>Style Template</label>
@@ -1130,10 +1129,10 @@
                 </button>
                 <div class="section-body">
                     <div class="field">
-                        <label>Image Margin</label>
+                        <label>Logo Padding</label>
                         <div class="range-row">
-                            <input type="range" id="image-margin" min="0" max="20" step="1" value="10">
-                            <span class="range-val" id="image-margin-val">10px</span>
+                            <input type="range" id="image-margin" min="0" max="20" step="1" value="2">
+                            <span class="range-val" id="image-margin-val">2px</span>
                         </div>
                     </div>
                 </div>
@@ -1322,11 +1321,14 @@
     buildStyleGrid('corner-dot-style-grid', 'corner-dot-style', cornerDotIcons);
 
     // ---- Image size presets ----
+    // These values are what the library accepts (0-1 ratio).
+    // The visual labels describe what the user actually sees.
+    // Margin is set to 2 internally to maximize logo visibility.
     const imageSizePresets = [
-        { value: 0.25, label: '25%', desc: 'Subtle' },
-        { value: 0.35, label: '35%', desc: 'Medium' },
-        { value: 0.40, label: '40%', desc: 'Standard' },
-        { value: 0.50, label: '50%', desc: 'Large' },
+        { value: 0.3, label: 'S', desc: 'Small' },
+        { value: 0.4, label: 'M', desc: 'Medium' },
+        { value: 0.5, label: 'L', desc: 'Large' },
+        { value: 0.6, label: 'XL', desc: 'Extra Large' },
     ];
 
     (function buildImageSizePresets() {
@@ -1335,11 +1337,11 @@
         imageSizePresets.forEach(p => {
             const btn = document.createElement('div');
             btn.className = 'size-preset' + (parseFloat(input.value) === p.value ? ' active' : '');
-            // Visual indicator: a box inside a box showing relative size
-            const outerPx = 28;
+            // Visual: logo square inside QR square, proportionally accurate
+            const outerPx = 30;
             const innerPx = Math.round(outerPx * p.value);
-            btn.innerHTML = '<div style="width:' + outerPx + 'px;height:' + outerPx + 'px;background:var(--bg-light);border-radius:3px;display:flex;align-items:center;justify-content:center;margin:0 auto 0.2rem;">' +
-                '<div style="width:' + innerPx + 'px;height:' + innerPx + 'px;background:var(--cobalt);border-radius:2px;opacity:0.6;"></div></div>' +
+            btn.innerHTML = '<div style="width:' + outerPx + 'px;height:' + outerPx + 'px;border:2px solid var(--border);border-radius:3px;display:flex;align-items:center;justify-content:center;margin:0 auto 0.25rem;background:white;">' +
+                '<div style="width:' + innerPx + 'px;height:' + innerPx + 'px;background:var(--cobalt);border-radius:2px;"></div></div>' +
                 '<span class="preset-label">' + p.label + '</span><span class="preset-desc">' + p.desc + '</span>';
             btn.addEventListener('click', () => {
                 input.value = p.value;
@@ -1772,14 +1774,14 @@
         document.getElementById('error-correction').value = config.errorCorrection || 'M';
         document.getElementById('quiet-zone').value = config.quietZone || '10';
         document.getElementById('quiet-zone-val').textContent = (config.quietZone || '10') + 'px';
-        document.getElementById('image-size').value = config.imageSize || '0.4';
+        document.getElementById('image-size').value = config.imageSize || '0.5';
         // Sync image size presets
-        const imgVal = parseFloat(config.imageSize || '0.4');
+        const imgVal = parseFloat(config.imageSize || '0.5');
         document.getElementById('image-size-presets').querySelectorAll('.size-preset').forEach((btn, i) => {
             btn.classList.toggle('active', imageSizePresets[i].value === imgVal);
         });
-        document.getElementById('image-margin').value = config.imageMargin || '5';
-        document.getElementById('image-margin-val').textContent = (config.imageMargin || '5') + 'px';
+        document.getElementById('image-margin').value = config.imageMargin || '2';
+        document.getElementById('image-margin-val').textContent = (config.imageMargin || '2') + 'px';
 
         // Sync visual style pickers
         ['dot-style-grid', 'corner-square-style-grid', 'corner-dot-style-grid'].forEach(gridId => {
@@ -1950,7 +1952,7 @@
             };
             if (c.centerImage) {
                 thumbOpts.image = c.centerImage;
-                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 10, imageSize: parseFloat(c.imageSize) || 0.4 };
+                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.5 };
             }
             new QRCodeStyling(thumbOpts).append(thumb);
 
