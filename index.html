@@ -1149,13 +1149,11 @@
                 </button>
                 <div class="section-body">
                     <div class="field">
-                        <label>PNG Output Size (px)</label>
-                        <div class="range-row">
-                            <input type="range" id="qr-size" min="300" max="2048" step="1" value="1024">
-                            <span class="range-val" id="qr-size-val">1024</span>
-                        </div>
-                        <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.3rem;">
-                            300px = 1" at 300 DPI. For print, <strong>use SVG</strong> (scales to any size).
+                        <label>PNG Print Size</label>
+                        <div class="size-presets" id="print-size-presets"></div>
+                        <input type="hidden" id="qr-size" value="900">
+                        <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.35rem;">
+                            At 300 DPI. SVG exports scale to any size automatically.
                         </div>
                     </div>
                     <div class="field">
@@ -1342,6 +1340,31 @@
         });
     })();
 
+    // ---- Print size presets (300 DPI) ----
+    const printSizePresets = [
+        { value: 300,  label: '1"',  desc: '300px' },
+        { value: 600,  label: '2"',  desc: '600px' },
+        { value: 900,  label: '3"',  desc: '900px' },
+        { value: 1200, label: '4"',  desc: '1200px' },
+    ];
+
+    (function buildPrintSizePresets() {
+        const container = document.getElementById('print-size-presets');
+        const input = document.getElementById('qr-size');
+        printSizePresets.forEach(p => {
+            const btn = document.createElement('div');
+            btn.className = 'size-preset' + (parseInt(input.value) === p.value ? ' active' : '');
+            btn.innerHTML = '<span class="preset-label">' + p.label + '</span><span class="preset-desc">' + p.desc + '</span>';
+            btn.addEventListener('click', () => {
+                input.value = p.value;
+                container.querySelectorAll('.size-preset').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                generateQR();
+            });
+            container.appendChild(btn);
+        });
+    })();
+
     // ---- Build color swatches ----
     function buildSwatches(containerId, colors, inputId, hexDisplayId) {
         const container = document.getElementById(containerId);
@@ -1424,7 +1447,7 @@
     });
 
     // ---- Range sliders ----
-    ['image-margin', 'qr-size', 'quiet-zone'].forEach(id => {
+    ['image-margin', 'quiet-zone'].forEach(id => {
         const input = document.getElementById(id);
         const val = document.getElementById(id + '-val');
         if (!input || !val) return;
@@ -1679,8 +1702,12 @@
         document.getElementById('dot-style').value = config.dotStyle || 'square';
         document.getElementById('corner-square-style').value = config.cornerSquareStyle || 'square';
         document.getElementById('corner-dot-style').value = config.cornerDotStyle || 'square';
-        document.getElementById('qr-size').value = config.qrSize || '600';
-        document.getElementById('qr-size-val').textContent = config.qrSize || '600';
+        document.getElementById('qr-size').value = config.qrSize || '900';
+        // Sync print size presets
+        const sizeVal = parseInt(config.qrSize || '900');
+        document.getElementById('print-size-presets').querySelectorAll('.size-preset').forEach((btn, i) => {
+            btn.classList.toggle('active', printSizePresets[i].value === sizeVal);
+        });
         document.getElementById('error-correction').value = config.errorCorrection || 'M';
         document.getElementById('quiet-zone').value = config.quietZone || '10';
         document.getElementById('quiet-zone-val').textContent = (config.quietZone || '10') + 'px';
