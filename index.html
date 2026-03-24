@@ -1193,17 +1193,21 @@
             <div class="download-actions">
                 <button class="btn btn-primary" onclick="downloadQR('svg')" title="Vector format — best for print at any size">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    SVG (Print)
+                    SVG
                 </button>
                 <button class="btn btn-secondary" onclick="downloadQR('png')" title="Raster format — for web and email">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    PNG (Web)
+                    PNG
                 </button>
                 <button class="btn btn-save" onclick="saveCurrentQR()">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Save
                 </button>
             </div>
+            <button class="btn btn-outline" onclick="testPrint()" style="width:100%;margin-top:0.5rem;" title="Print at exact physical size">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                Test Print at Exact Size
+            </button>
         </div>
     </div>
 </div>
@@ -1610,7 +1614,7 @@
         debounceTimer = setTimeout(_generateQR, 150);
     }
 
-    function _generateQR() {
+    function getQROptions(sizeOverride) {
         const url = document.getElementById('qr-url').value || 'https://www.mitratech.com';
         const dotColor = document.getElementById('dot-color').value;
         const bgColor = document.getElementById('bg-color').value;
@@ -1619,14 +1623,11 @@
         const dotStyle = document.getElementById('dot-style').value;
         const cornerSquareStyle = document.getElementById('corner-square-style').value;
         const cornerDotStyle = document.getElementById('corner-dot-style').value;
-        const size = parseInt(document.getElementById('qr-size').value);
+        const size = sizeOverride || parseInt(document.getElementById('qr-size').value);
         const errorCorrection = document.getElementById('error-correction').value;
         const imageSize = parseFloat(document.getElementById('image-size').value);
         const imageMargin = parseInt(document.getElementById('image-margin').value);
         const quietZone = parseInt(document.getElementById('quiet-zone').value) || 0;
-
-        const preview = document.getElementById('qr-preview');
-        preview.innerHTML = '';
 
         const options = {
             width: size, height: size, type: 'canvas', data: url,
@@ -1642,9 +1643,19 @@
             options.image = centerImageData;
             options.imageOptions = { crossOrigin: 'anonymous', margin: imageMargin, imageSize: imageSize };
         }
+        return options;
+    }
 
-        qrCode = new QRCodeStyling(options);
-        qrCode.append(preview);
+    function _generateQR() {
+        const preview = document.getElementById('qr-preview');
+        preview.innerHTML = '';
+
+        // Preview always renders at 400px for consistent display
+        const previewQR = new QRCodeStyling(getQROptions(400));
+        previewQR.append(preview);
+
+        // Export QR uses the actual selected size
+        qrCode = new QRCodeStyling(getQROptions());
         updateFilename();
         updateSummary();
     }
@@ -1652,8 +1663,51 @@
     // ---- Download ----
     function downloadQR(format) {
         if (!qrCode) return;
+        // Rebuild at export size to ensure fresh render
+        qrCode = new QRCodeStyling(getQROptions());
         const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
         qrCode.download({ name: name, extension: format });
+    }
+
+    // ---- Test Print at exact physical size ----
+    function testPrint() {
+        const size = parseInt(document.getElementById('qr-size').value);
+        const inches = size / 300;
+        const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
+
+        // Build a high-res QR for printing
+        const printQR = new QRCodeStyling(getQROptions());
+        const tempDiv = document.createElement('div');
+        printQR.append(tempDiv);
+
+        // Wait for canvas to render, then open print window
+        setTimeout(() => {
+            const canvas = tempDiv.querySelector('canvas');
+            if (!canvas) { showToast('Error generating print preview'); return; }
+            const dataUrl = canvas.toDataURL('image/png');
+
+            const printWin = window.open('', '_blank');
+            printWin.document.write('<!DOCTYPE html><html><head><title>Print: ' + name + '</title><style>' +
+                '@page { margin: 0.5in; }' +
+                'body { margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, sans-serif; }' +
+                '.print-qr { width: ' + inches + 'in; height: ' + inches + 'in; }' +
+                '.print-qr img { width: 100%; height: 100%; image-rendering: pixelated; }' +
+                '.info { margin-top: 0.25in; font-size: 9pt; color: #666; text-align: center; }' +
+                '.ruler { margin-top: 0.25in; width: ' + inches + 'in; height: 0.2in; border: 1px solid #ccc; position: relative; display: flex; }' +
+                '.ruler-inch { flex: 1; border-right: 1px solid #ccc; position: relative; }' +
+                '.ruler-inch:last-child { border-right: none; }' +
+                '.ruler-inch::after { content: attr(data-n); position: absolute; bottom: -14pt; left: 50%; transform: translateX(-50%); font-size: 7pt; color: #999; }' +
+                '@media print { .no-print { display: none !important; } }' +
+                '</style></head><body>' +
+                '<div class="no-print" style="margin-bottom:0.3in;padding:0.5em 1em;background:#EFF6FF;border-radius:6px;font-size:10pt;color:#0067D2;font-weight:600;">' +
+                'Print this page to verify exact ' + inches + '&Prime; &times; ' + inches + '&Prime; sizing. Use Cmd/Ctrl+P.' +
+                '</div>' +
+                '<div class="print-qr"><img src="' + dataUrl + '" alt="QR Code"></div>' +
+                '<div class="ruler">' + Array.from({length: Math.max(1, Math.round(inches))}, (_,i) => '<div class="ruler-inch" data-n="' + (i+1) + '&Prime;"></div>').join('') + '</div>' +
+                '<div class="info">' + name + ' &mdash; ' + inches + '&Prime; &times; ' + inches + '&Prime; at 300 DPI (' + size + 'px)</div>' +
+                '</body></html>');
+            printWin.document.close();
+        }, 300);
     }
 
     // ---- Saved QR Codes (localStorage) ----
