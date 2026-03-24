@@ -1512,7 +1512,6 @@
         const reader = new FileReader();
         reader.onload = function(ev) {
             centerImageData = ev.target.result;
-            document.getElementById('error-correction').value = 'Q';
             const area = document.getElementById('image-upload-area');
             area.classList.add('has-image');
             const label = document.getElementById('upload-label');
@@ -1645,8 +1644,8 @@
             hint.style.display = 'none';
         }
     }
-    document.getElementById('qr-url').addEventListener('input', updateUrlHint);
-    updateUrlHint();
+    // updateUrlHint is called from _generateQR → updateLogoWarning chain.
+    // No separate listener needed — generateQR is already wired to qr-url input.
 
     // ---- Style Templates ----
     const TEMPLATE_KEY = 'mitratech_qr_templates';
@@ -1851,6 +1850,7 @@
         if (!document.getElementById('qr-url').value.trim()) {
             qrCode = null;
             document.getElementById('logo-scan-warning').style.display = 'none';
+            updateUrlHint();
             preview.innerHTML = '<div style="text-align:center;color:#94A3B8;padding:2rem;">' +
                 '<svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 0.75rem;display:block;opacity:0.4;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg>' +
                 '<div style="font-size:0.85rem;font-weight:600;">Enter a URL to generate</div>' +
