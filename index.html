@@ -442,27 +442,52 @@
             color: var(--cobalt);
         }
 
+        .image-upload-area.has-image {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-align: left;
+        }
+
+        .image-upload-area.has-image .upload-icon { display: none; }
+
+        .image-upload-area.has-image input[type="file"] {
+            display: none;
+        }
+
         .image-upload-area .preview-thumb {
-            max-width: 70px;
-            max-height: 70px;
+            width: 48px;
+            height: 48px;
             border-radius: 8px;
-            margin-top: 0.75rem;
+            object-fit: contain;
+            background: white;
             box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+        }
+
+        .image-upload-area.has-image p {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 0.8rem;
         }
 
         .clear-image-btn {
-            display: inline-block;
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--orange);
             cursor: pointer;
             border: 1.5px solid var(--orange);
             background: white;
             font-weight: 600;
-            padding: 0.3rem 0.75rem;
+            padding: 0.3rem 0.6rem;
             border-radius: 6px;
             position: relative;
             z-index: 10;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
 
         .clear-image-btn:hover { background: var(--orange); color: white; }
@@ -1433,7 +1458,8 @@
             centerImageData = ev.target.result;
             const area = document.getElementById('image-upload-area');
             area.classList.add('has-image');
-            document.getElementById('upload-label').innerHTML = '<strong>' + file.name + '</strong>';
+            const label = document.getElementById('upload-label');
+            label.innerHTML = '<strong>' + file.name + '</strong>';
             const oldImg = area.querySelector('.preview-thumb');
             if (oldImg) oldImg.remove();
             const oldBtn = area.querySelector('.clear-image-btn');
@@ -1441,17 +1467,18 @@
             const img = document.createElement('img');
             img.src = centerImageData;
             img.className = 'preview-thumb';
-            area.appendChild(img);
+            area.insertBefore(img, label);
             document.getElementById('image-size-section').style.display = '';
             const btn = document.createElement('button');
             btn.className = 'clear-image-btn';
-            btn.textContent = 'Remove image';
+            btn.textContent = 'Remove';
             btn.onclick = function(ev) {
                 ev.stopPropagation();
+                ev.preventDefault();
                 centerImageData = null;
                 area.classList.remove('has-image');
                 document.getElementById('center-image').value = '';
-                document.getElementById('upload-label').innerHTML = '<strong>Click to upload</strong> or drag and drop';
+                label.innerHTML = '<strong>Click to upload</strong> or drag and drop';
                 img.remove();
                 btn.remove();
                 document.getElementById('image-size-section').style.display = 'none';
@@ -1810,21 +1837,23 @@
 
         if (centerImageData) {
             area.classList.add('has-image');
-            document.getElementById('upload-label').innerHTML = '<strong>Saved image loaded</strong>';
+            const label = document.getElementById('upload-label');
+            label.innerHTML = '<strong>Saved image loaded</strong>';
             const img = document.createElement('img');
             img.src = centerImageData;
             img.className = 'preview-thumb';
-            area.appendChild(img);
+            area.insertBefore(img, label);
             document.getElementById('image-size-section').style.display = '';
             const btn = document.createElement('button');
             btn.className = 'clear-image-btn';
-            btn.textContent = 'Remove image';
+            btn.textContent = 'Remove';
             btn.onclick = function(ev) {
                 ev.stopPropagation();
+                ev.preventDefault();
                 centerImageData = null;
                 area.classList.remove('has-image');
                 document.getElementById('center-image').value = '';
-                document.getElementById('upload-label').innerHTML = '<strong>Click to upload</strong> or drag and drop';
+                label.innerHTML = '<strong>Click to upload</strong> or drag and drop';
                 img.remove();
                 btn.remove();
                 document.getElementById('image-size-section').style.display = 'none';
