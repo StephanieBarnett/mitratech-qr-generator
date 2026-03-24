@@ -844,6 +844,22 @@
             box-shadow: 0 0 0 2px rgba(0,103,210,0.2);
         }
 
+        .saved-card-check {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            width: 20px;
+            height: 20px;
+            accent-color: var(--cobalt);
+            cursor: pointer;
+            z-index: 5;
+            display: none;
+        }
+
+        .bulk-mode .saved-card-check { display: block; }
+
+        .bulk-mode .saved-card { position: relative; }
+
         .saved-empty {
             text-align: center;
             padding: 3rem 2rem;
@@ -1257,7 +1273,8 @@
                     Import
                     <input type="file" accept=".json" onchange="importSaved(event)" style="display:none;">
                 </label>
-                <button class="btn btn-danger btn-sm" onclick="clearAllSaved()">Clear All</button>
+                <button class="btn btn-outline btn-sm" id="bulk-select-btn" onclick="toggleBulkSelect()">Select</button>
+                <button class="btn btn-danger btn-sm hidden" id="bulk-delete-btn" onclick="bulkDeleteSaved()">Delete Selected</button>
             </div>
         </div>
         <div style="padding:1rem 1.5rem 0;">
@@ -2045,11 +2062,6 @@
             svgBtn.innerHTML = '<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> SVG';
             svgBtn.title = 'Download SVG';
             svgBtn.onclick = () => downloadSavedQR(entry, 'svg');
-            const pngBtn = document.createElement('button');
-            pngBtn.className = 'btn btn-outline btn-sm';
-            pngBtn.textContent = 'PNG';
-            pngBtn.title = 'Download PNG';
-            pngBtn.onclick = () => downloadSavedQR(entry, 'png');
             const loadBtn = document.createElement('button');
             loadBtn.className = 'btn btn-outline btn-sm';
             loadBtn.textContent = 'Edit';
@@ -2059,17 +2071,69 @@
             delBtn.className = 'btn btn-danger btn-sm';
             delBtn.innerHTML = '&times;';
             delBtn.title = 'Delete';
-            delBtn.onclick = () => deleteSavedQR(entry.id);
+            delBtn.onclick = () => { if (confirm('Delete "' + (c.name || 'Untitled') + '"?')) deleteSavedQR(entry.id); };
             actions.appendChild(svgBtn);
-            actions.appendChild(pngBtn);
             actions.appendChild(loadBtn);
             actions.appendChild(delBtn);
             info.appendChild(actions);
 
+            const cb = document.createElement('input');
+            cb.type = 'checkbox';
+            cb.className = 'saved-card-check';
+            cb.dataset.id = entry.id;
+            cb.onchange = updateBulkDeleteBtn;
+            card.appendChild(cb);
             card.appendChild(thumb);
             card.appendChild(info);
             grid.appendChild(card);
         });
+
+        // Preserve bulk mode state
+        if (document.getElementById('saved-grid').closest('.panel')?.classList.contains('bulk-mode')) {
+            // already in bulk mode, checkboxes will show via CSS
+        }
+    }
+
+    let bulkMode = false;
+    function toggleBulkSelect() {
+        bulkMode = !bulkMode;
+        const panel = document.getElementById('saved-section').querySelector('.panel');
+        const btn = document.getElementById('bulk-select-btn');
+        const delBtn = document.getElementById('bulk-delete-btn');
+        if (bulkMode) {
+            panel.classList.add('bulk-mode');
+            btn.textContent = 'Cancel';
+            btn.className = 'btn btn-outline btn-sm';
+            delBtn.classList.remove('hidden');
+        } else {
+            panel.classList.remove('bulk-mode');
+            btn.textContent = 'Select';
+            delBtn.classList.add('hidden');
+            // Uncheck all
+            panel.querySelectorAll('.saved-card-check').forEach(cb => cb.checked = false);
+        }
+        updateBulkDeleteBtn();
+    }
+
+    function updateBulkDeleteBtn() {
+        const checked = document.querySelectorAll('.saved-card-check:checked').length;
+        const btn = document.getElementById('bulk-delete-btn');
+        btn.textContent = checked > 0 ? 'Delete ' + checked + ' Selected' : 'Delete Selected';
+    }
+
+    function bulkDeleteSaved() {
+        const ids = [...document.querySelectorAll('.saved-card-check:checked')].map(cb => cb.dataset.id);
+        if (ids.length === 0) { showToast('No codes selected'); return; }
+        if (!confirm('Delete ' + ids.length + ' QR code(s)? This cannot be undone.')) return;
+        const idSet = new Set(ids);
+        setSaved(getSaved().filter(e => !idSet.has(e.id)));
+        bulkMode = false;
+        const panel = document.getElementById('saved-section').querySelector('.panel');
+        panel.classList.remove('bulk-mode');
+        document.getElementById('bulk-select-btn').textContent = 'Select';
+        document.getElementById('bulk-delete-btn').classList.add('hidden');
+        renderSavedGrid();
+        showToast('Deleted ' + ids.length + ' QR code(s)');
     }
 
     function showToast(msg) {
