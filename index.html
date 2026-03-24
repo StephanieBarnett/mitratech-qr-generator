@@ -521,10 +521,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 320px;
-            margin: 1.5rem;
+            min-height: 220px;
+            max-height: 280px;
+            margin: 1rem 1.5rem;
             border-radius: var(--radius);
-            padding: 1.5rem;
+            padding: 1rem;
+            overflow: hidden;
             background-image:
                 linear-gradient(45deg, #f0f1f3 25%, transparent 25%),
                 linear-gradient(-45deg, #f0f1f3 25%, transparent 25%),
@@ -536,6 +538,7 @@
 
         #qr-preview canvas, #qr-preview svg {
             max-width: 100%;
+            max-height: 260px;
             height: auto;
             border-radius: 4px;
         }
@@ -935,20 +938,29 @@
             </button>
             <div class="section-body">
                 <div class="field">
-                    <label>QR Code Size (px)</label>
+                    <label>Output Size (px)</label>
                     <div class="range-row">
-                        <input type="range" id="qr-size" min="128" max="1200" step="1" value="600">
-                        <span class="range-val" id="qr-size-val">600</span>
+                        <input type="range" id="qr-size" min="128" max="2048" step="1" value="1024">
+                        <span class="range-val" id="qr-size-val">1024</span>
                     </div>
+                    <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.3rem;">PNG exports at this size. For print, use SVG (vector, infinite resolution).</div>
                 </div>
                 <div class="field">
                     <label>Error Correction</label>
                     <select id="error-correction">
-                        <option value="L">Low (7%) &mdash; Best for very long URLs</option>
+                        <option value="L">Low (7%) &mdash; Maximum data capacity</option>
                         <option value="M">Medium (15%)</option>
-                        <option value="Q" selected>Quartile (25%) &mdash; Recommended</option>
-                        <option value="H">High (30%) &mdash; Best for logos &amp; damage recovery</option>
+                        <option value="Q">Quartile (25%)</option>
+                        <option value="H" selected>High (30%) &mdash; Best for print &amp; logos</option>
                     </select>
+                </div>
+                <div class="field">
+                    <label>Quiet Zone (margin around QR)</label>
+                    <div class="range-row">
+                        <input type="range" id="quiet-zone" min="0" max="40" step="1" value="16">
+                        <span class="range-val" id="quiet-zone-val">16px</span>
+                    </div>
+                    <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.3rem;">Whitespace border required by scanners. Minimum 8px recommended.</div>
                 </div>
             </div>
         </div>
@@ -962,15 +974,18 @@
         </div>
         <div id="qr-preview"></div>
         <div class="preview-actions">
-            <div class="filename-display" id="filename-display">mitratech-qr.png</div>
+            <div class="field" style="margin-bottom:0.75rem;">
+                <label style="font-size:0.7rem;text-align:center;">Filename</label>
+                <input type="text" id="qr-name-preview" value="mitratech-qr" placeholder="my-qr-code" style="text-align:center;font-size:0.85rem;padding:0.5rem 0.75rem;">
+            </div>
             <div class="download-actions">
-                <button class="btn btn-primary" onclick="downloadQR('png')">
+                <button class="btn btn-primary" onclick="downloadQR('svg')" title="Vector format — best for print at any size">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    PNG
+                    SVG (Print)
                 </button>
-                <button class="btn btn-secondary" onclick="downloadQR('svg')">
+                <button class="btn btn-secondary" onclick="downloadQR('png')" title="Raster format — for web and email">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    SVG
+                    PNG (Web)
                 </button>
                 <button class="btn btn-save" onclick="saveCurrentQR()">
                     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1162,17 +1177,18 @@
     });
 
     // ---- Range sliders ----
-    ['image-size', 'image-margin', 'qr-size'].forEach(id => {
+    ['image-size', 'image-margin', 'qr-size', 'quiet-zone'].forEach(id => {
         const input = document.getElementById(id);
         const val = document.getElementById(id + '-val');
+        if (!input || !val) return;
         input.addEventListener('input', () => {
-            val.textContent = id === 'image-margin' ? input.value + 'px' : input.value;
+            val.textContent = (id === 'image-margin' || id === 'quiet-zone') ? input.value + 'px' : input.value;
             generateQR();
         });
     });
 
     // ---- Other inputs ----
-    ['qr-url', 'qr-name', 'dot-style', 'corner-square-style', 'corner-dot-style', 'error-correction'].forEach(id => {
+    ['qr-url', 'qr-name', 'dot-style', 'corner-square-style', 'corner-dot-style', 'error-correction', 'quiet-zone'].forEach(id => {
         document.getElementById(id).addEventListener('input', generateQR);
         document.getElementById(id).addEventListener('change', generateQR);
     });
@@ -1197,12 +1213,13 @@
     document.getElementById('qr-url').addEventListener('input', updateUrlHint);
     updateUrlHint();
 
-    // ---- Filename display ----
-    function updateFilename() {
-        const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
-        document.getElementById('filename-display').textContent = name + '.png';
-    }
-    document.getElementById('qr-name').addEventListener('input', updateFilename);
+    // ---- Sync name fields (left panel <-> right panel) ----
+    const nameLeft = document.getElementById('qr-name');
+    const nameRight = document.getElementById('qr-name-preview');
+    nameLeft.addEventListener('input', () => { nameRight.value = nameLeft.value; });
+    nameRight.addEventListener('input', () => { nameLeft.value = nameRight.value; });
+
+    function updateFilename() { /* no-op, name read directly at download time */ }
 
     // ---- Generate QR code ----
     let debounceTimer = null;
@@ -1224,12 +1241,14 @@
         const errorCorrection = document.getElementById('error-correction').value;
         const imageSize = parseFloat(document.getElementById('image-size').value);
         const imageMargin = parseInt(document.getElementById('image-margin').value);
+        const quietZone = parseInt(document.getElementById('quiet-zone').value) || 0;
 
         const preview = document.getElementById('qr-preview');
         preview.innerHTML = '';
 
         const options = {
             width: size, height: size, type: 'canvas', data: url,
+            margin: quietZone,
             dotsOptions: { color: dotColor, type: dotStyle },
             backgroundOptions: { color: bgColor },
             cornersSquareOptions: { color: cornerColor, type: cornerSquareStyle },
@@ -1281,6 +1300,7 @@
             errorCorrection: document.getElementById('error-correction').value,
             imageSize: document.getElementById('image-size').value,
             imageMargin: document.getElementById('image-margin').value,
+            quietZone: document.getElementById('quiet-zone').value,
             centerImage: centerImageData,
         };
     }
@@ -1301,7 +1321,9 @@
         document.getElementById('corner-dot-style').value = config.cornerDotStyle || 'square';
         document.getElementById('qr-size').value = config.qrSize || '600';
         document.getElementById('qr-size-val').textContent = config.qrSize || '600';
-        document.getElementById('error-correction').value = config.errorCorrection || 'M';
+        document.getElementById('error-correction').value = config.errorCorrection || 'H';
+        document.getElementById('quiet-zone').value = config.quietZone || '16';
+        document.getElementById('quiet-zone-val').textContent = (config.quietZone || '16') + 'px';
         document.getElementById('image-size').value = config.imageSize || '0.3';
         document.getElementById('image-size-val').textContent = config.imageSize || '0.3';
         document.getElementById('image-margin').value = config.imageMargin || '5';
