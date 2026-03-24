@@ -1884,6 +1884,29 @@
         showToast('QR code saved to library');
     }
 
+    function downloadSavedQR(entry, format) {
+        const c = entry.config;
+        const cc = c.cornerSame !== false ? (c.dotColor || '#000000') : (c.cornerColor || '#000000');
+        const size = parseInt(c.qrSize) || 300;
+        const opts = {
+            width: size, height: size, type: 'canvas',
+            data: c.url || 'https://mitratech.com',
+            margin: parseInt(c.quietZone) || 10,
+            dotsOptions: { color: c.dotColor || '#000000', type: c.dotStyle || 'square' },
+            backgroundOptions: { color: c.bgColor || '#FFFFFF' },
+            cornersSquareOptions: { color: cc, type: c.cornerSquareStyle || 'square' },
+            cornersDotOptions: { color: cc, type: c.cornerDotStyle || 'square' },
+            qrOptions: { errorCorrectionLevel: c.errorCorrection || 'M' },
+        };
+        if (c.centerImage) {
+            opts.image = c.centerImage;
+            opts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.9 };
+        }
+        const dlQR = new QRCodeStyling(opts);
+        dlQR.download({ name: c.name || 'mitratech-qr', extension: format });
+        showToast('Downloading ' + format.toUpperCase());
+    }
+
     function loadSavedQR(id) {
         const saved = getSaved();
         const entry = saved.find(e => e.id === id);
@@ -2017,14 +2040,28 @@
 
             const actions = document.createElement('div');
             actions.className = 'saved-card-actions';
+            const svgBtn = document.createElement('button');
+            svgBtn.className = 'btn btn-primary btn-sm';
+            svgBtn.innerHTML = '<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> SVG';
+            svgBtn.title = 'Download SVG';
+            svgBtn.onclick = () => downloadSavedQR(entry, 'svg');
+            const pngBtn = document.createElement('button');
+            pngBtn.className = 'btn btn-outline btn-sm';
+            pngBtn.textContent = 'PNG';
+            pngBtn.title = 'Download PNG';
+            pngBtn.onclick = () => downloadSavedQR(entry, 'png');
             const loadBtn = document.createElement('button');
-            loadBtn.className = 'btn btn-primary btn-sm';
-            loadBtn.textContent = 'Load';
+            loadBtn.className = 'btn btn-outline btn-sm';
+            loadBtn.textContent = 'Edit';
+            loadBtn.title = 'Load into editor';
             loadBtn.onclick = () => loadSavedQR(entry.id);
             const delBtn = document.createElement('button');
             delBtn.className = 'btn btn-danger btn-sm';
-            delBtn.textContent = 'Delete';
+            delBtn.innerHTML = '&times;';
+            delBtn.title = 'Delete';
             delBtn.onclick = () => deleteSavedQR(entry.id);
+            actions.appendChild(svgBtn);
+            actions.appendChild(pngBtn);
             actions.appendChild(loadBtn);
             actions.appendChild(delBtn);
             info.appendChild(actions);
