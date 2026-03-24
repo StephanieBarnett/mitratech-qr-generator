@@ -1152,7 +1152,7 @@
                     <div class="field">
                         <label>PNG Export Size (for web/email only)</label>
                         <div class="size-presets" id="print-size-presets"></div>
-                        <input type="hidden" id="qr-size" value="900">
+                        <input type="hidden" id="qr-size" value="300">
                         <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.35rem;">
                             Only affects PNG downloads. SVG is vector and scales infinitely in Illustrator.
                         </div>
@@ -1763,9 +1763,9 @@
         document.getElementById('dot-style').value = config.dotStyle || 'square';
         document.getElementById('corner-square-style').value = config.cornerSquareStyle || 'square';
         document.getElementById('corner-dot-style').value = config.cornerDotStyle || 'square';
-        document.getElementById('qr-size').value = config.qrSize || '900';
+        document.getElementById('qr-size').value = config.qrSize || '300';
         // Sync print size presets
-        const sizeVal = parseInt(config.qrSize || '900');
+        const sizeVal = parseInt(config.qrSize || '300');
         document.getElementById('print-size-presets').querySelectorAll('.size-preset').forEach((btn, i) => {
             btn.classList.toggle('active', printSizePresets[i].value === sizeVal);
         });
