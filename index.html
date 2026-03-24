@@ -1048,7 +1048,7 @@
                     <label style="font-size:0.72rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem;">Center Logo Size</label>
                     <div class="size-presets" id="image-size-presets"></div>
                 </div>
-                <input type="hidden" id="image-size" value="0.9">
+                <input type="hidden" id="image-size" value="0.3">
             </div>
             <div class="field" style="margin-bottom:0;">
                 <label>Style Template</label>
@@ -1230,6 +1230,7 @@
             Live Preview
         </div>
         <div id="qr-preview"></div>
+        <div id="logo-scan-warning" style="display:none;font-size:0.72rem;padding:0.5rem 0.75rem;margin:0 1rem;border-radius:6px;text-align:center;"></div>
         <div class="preview-actions">
             <div class="field" style="margin-bottom:0.75rem;">
                 <label style="font-size:0.7rem;text-align:center;">Filename</label>
@@ -1369,15 +1370,30 @@
     buildStyleGrid('corner-square-style-grid', 'corner-square-style', cornerSquareIcons);
     buildStyleGrid('corner-dot-style-grid', 'corner-dot-style', cornerDotIcons);
 
+    // ---- Logo scanability helpers ----
+    // imageSize is a ratio of the QR inner width. Area coverage = imageSize^2.
+    // EC recovery capacities: L=7%, M=15%, Q=25%, H=30%.
+    // The logo destroys data modules it covers. For reliable scanning,
+    // area coverage must stay well within EC capacity (with safety margin).
+    function getLogoCoverage(imageSize) { return imageSize * imageSize; }
+    function getLogoScanInfo(imageSize) {
+        const coverage = getLogoCoverage(imageSize);
+        const coveragePct = Math.round(coverage * 100);
+        // EC capacity thresholds (with ~5% safety margin for real-world scanning)
+        if (coverage <= 0.10) return { ec: 'Q', level: 'good', coveragePct: coveragePct, msg: coveragePct + '% covered — reliable with Q or H correction' };
+        if (coverage <= 0.20) return { ec: 'H', level: 'ok', coveragePct: coveragePct, msg: coveragePct + '% covered — needs H correction, should scan' };
+        if (coverage <= 0.25) return { ec: 'H', level: 'warn', coveragePct: coveragePct, msg: coveragePct + '% covered — at H correction limit, may not scan reliably' };
+        return { ec: 'H', level: 'bad', coveragePct: coveragePct, msg: coveragePct + '% covered — exceeds error correction, likely unscannable' };
+    }
+
     // ---- Image size presets ----
-    // These values are what the library accepts (0-1 ratio).
-    // The visual labels describe what the user actually sees.
-    // Margin is set to 2 internally to maximize logo visibility.
+    // These values are what the library accepts (0-1 ratio). Area = value^2.
+    // EC-H recovers 30% of data, but real-world needs ~5-10% safety margin,
+    // so max safe logo area is ~20%. sqrt(0.20) ≈ 0.45.
     const imageSizePresets = [
-        { value: 0.3, label: 'S', desc: 'Small' },
-        { value: 0.5, label: 'M', desc: 'Medium' },
-        { value: 0.7, label: 'L', desc: 'Large' },
-        { value: 0.9, label: 'XL', desc: 'Extra Large' },
+        { value: 0.2, label: 'S', desc: '4% area' },
+        { value: 0.3, label: 'M', desc: '9% area' },
+        { value: 0.45, label: 'L', desc: '20% area — max safe' },
     ];
 
     (function buildImageSizePresets() {
@@ -1548,19 +1564,82 @@
         document.getElementById(id).addEventListener('change', generateQR);
     });
 
-    // ---- URL length hint ----
+    // ---- URL length / scanability hint ----
+    // Byte-mode capacity per version at each EC level (chars).
+    // Source: ISO 18004 / DENSO WAVE tables.
+    const qrVersionCapacity = [
+        /*  v1 */ { L:17, M:14, Q:11, H:7 },
+        /*  v2 */ { L:32, M:26, Q:20, H:14 },
+        /*  v3 */ { L:53, M:42, Q:32, H:24 },
+        /*  v4 */ { L:78, M:62, Q:46, H:34 },
+        /*  v5 */ { L:106, M:84, Q:60, H:44 },
+        /*  v6 */ { L:134, M:106, Q:74, H:58 },
+        /*  v7 */ { L:154, M:122, Q:86, H:64 },
+        /*  v8 */ { L:192, M:152, Q:108, H:84 },
+        /*  v9 */ { L:230, M:180, Q:130, H:98 },
+        /* v10 */ { L:271, M:213, Q:151, H:119 },
+        /* v11 */ { L:321, M:251, Q:177, H:137 },
+        /* v12 */ { L:367, M:287, Q:203, H:155 },
+        /* v13 */ { L:425, M:331, Q:241, H:177 },
+        /* v14 */ { L:458, M:362, Q:258, H:194 },
+    ];
+    function getQRVersion(charCount, ecLevel) {
+        for (var i = 0; i < qrVersionCapacity.length; i++) {
+            if (charCount <= qrVersionCapacity[i][ecLevel]) return i + 1;
+        }
+        return 15; // beyond v14
+    }
+    function getModuleCount(version) { return 17 + version * 4; }
+    // At 300 DPI, 1 inch = 300 dots. Min 4 dots/module for reliable scanning.
+    // With quiet zone of 4 modules, effective modules = total + 8.
+    function getMinPrintInches(version) {
+        var modules = getModuleCount(version) + 8; // +8 for 4-module quiet zone on each side
+        return modules * 4 / 300; // 4 dots per module at 300 DPI
+    }
+
     function updateUrlHint() {
         const url = document.getElementById('qr-url').value;
         const hint = document.getElementById('url-hint');
         const len = url.length;
-        if (len > 120) {
+        if (!len) { hint.style.display = 'none'; return; }
+
+        const hasLogo = !!centerImageData;
+        // Determine the effective EC level (same logic as getQROptions)
+        var ecLevel = document.getElementById('error-correction').value;
+        if (hasLogo) {
+            const imgSize = parseFloat(document.getElementById('image-size').value);
+            const scanInfo = getLogoScanInfo(imgSize);
+            const ecRank = { L: 0, M: 1, Q: 2, H: 3 };
+            if (ecRank[scanInfo.ec] > ecRank[ecLevel]) ecLevel = scanInfo.ec;
+        }
+
+        const version = getQRVersion(len, ecLevel);
+        const modules = getModuleCount(version);
+        const minInches = getMinPrintInches(version);
+        const printSize = parseInt(document.getElementById('qr-size').value);
+        const printInches = printSize / 300;
+
+        var parts = [len + ' chars · Version ' + version + ' (' + modules + '&times;' + modules + ') · EC-' + ecLevel];
+
+        // Check if current print size is adequate
+        if (printInches < minInches) {
+            parts.push('Min print size: ' + minInches.toFixed(1) + '&Prime; — current ' + printInches.toFixed(1) + '&Prime; may not scan');
+            if (hasLogo) parts.push('With logo + EC-H, consider a shorter URL or larger print size');
+            hint.style.display = 'block';
+            hint.style.color = '#DC2626';
+            hint.style.fontWeight = '600';
+            hint.innerHTML = parts.join('<br>');
+        } else if (printInches < minInches * 1.3) {
+            parts.push('Tight fit at ' + printInches.toFixed(1) + '&Prime; — test scan before final print');
             hint.style.display = 'block';
             hint.style.color = 'var(--orange)';
-            hint.innerHTML = len + ' chars &mdash; Long URL. May need larger than 1&Prime;&times;1&Prime; print for reliable scanning.';
-        } else if (len > 70) {
+            hint.style.fontWeight = '600';
+            hint.innerHTML = parts.join('<br>');
+        } else if (len > 50) {
             hint.style.display = 'block';
             hint.style.color = 'var(--text-dim)';
-            hint.innerHTML = len + ' chars';
+            hint.style.fontWeight = 'normal';
+            hint.innerHTML = parts[0];
         } else {
             hint.style.display = 'none';
         }
@@ -1680,6 +1759,27 @@
         if (styleText) styleText.textContent = labels[document.getElementById('dot-style').value] || 'Square';
     }
 
+    function updateLogoWarning() {
+        const el = document.getElementById('logo-scan-warning');
+        if (!centerImageData) { el.style.display = 'none'; updateUrlHint(); return; }
+        const imageSize = parseFloat(document.getElementById('image-size').value);
+        const info = getLogoScanInfo(imageSize);
+        const opts = getQROptions(400);
+        const effectiveEC = opts.qrOptions.errorCorrectionLevel;
+        const ecLabels = { L: 'Low 7%', M: 'Med 15%', Q: 'Quartile 25%', H: 'High 30%' };
+        const styles = {
+            good: 'color:#059669;background:#ECFDF5;',
+            ok:   'color:#B45309;background:#FFFBEB;',
+            warn: 'color:#DC2626;background:#FEF2F2;',
+            bad:  'color:#DC2626;background:#FEF2F2;'
+        };
+        el.style.cssText = 'display:block;font-size:0.72rem;padding:0.5rem 0.75rem;margin:0.5rem 1rem 0;border-radius:6px;text-align:center;font-weight:600;' + styles[info.level];
+        el.innerHTML = 'Logo covers ' + info.coveragePct + '% of QR area · EC auto-set to ' + ecLabels[effectiveEC] +
+            (info.level === 'warn' ? '<br>Borderline — test scan before printing' : '') +
+            (info.level === 'bad' ? '<br>Too large to scan reliably — reduce logo size' : '');
+        updateUrlHint(); // recalc URL hint since EC level may have changed
+    }
+
     // ---- Sync name fields (left panel <-> right panel) ----
     const nameLeft = document.getElementById('qr-name');
     const nameRight = document.getElementById('qr-name-preview');
@@ -1723,10 +1823,12 @@
         if (centerImageData) {
             options.image = centerImageData;
             options.imageOptions = { crossOrigin: 'anonymous', margin: imageMargin, imageSize: imageSize, hideBackgroundDots: true };
-            // Auto-bump error correction from L to M when a logo is present,
-            // since low error correction with a center image will likely be unscannable
-            if (errorCorrection === 'L') {
-                options.qrOptions.errorCorrectionLevel = 'M';
+            // Auto-bump error correction based on actual logo area coverage.
+            // The logo destroys data modules it covers — EC must be able to recover them.
+            const scanInfo = getLogoScanInfo(imageSize);
+            const ecRank = { L: 0, M: 1, Q: 2, H: 3 };
+            if (ecRank[scanInfo.ec] > ecRank[errorCorrection]) {
+                options.qrOptions.errorCorrectionLevel = scanInfo.ec;
             }
         }
         return options;
@@ -1739,6 +1841,7 @@
         // Show placeholder if URL is empty
         if (!document.getElementById('qr-url').value.trim()) {
             qrCode = null;
+            document.getElementById('logo-scan-warning').style.display = 'none';
             preview.innerHTML = '<div style="text-align:center;color:#94A3B8;padding:2rem;">' +
                 '<svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 0.75rem;display:block;opacity:0.4;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><rect x="19" y="14" width="2" height="2"/><rect x="14" y="19" width="2" height="2"/><rect x="19" y="19" width="2" height="2"/></svg>' +
                 '<div style="font-size:0.85rem;font-weight:600;">Enter a URL to generate</div>' +
@@ -1757,6 +1860,7 @@
         qrCode = new QRCodeStyling(getQROptions());
         updateFilename();
         updateSummary();
+        updateLogoWarning();
     }
 
     // ---- Download ----
@@ -1776,8 +1880,28 @@
         const inches = size / 300;
         const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
 
+        // Gather current settings for the print page
+        const opts = getQROptions();
+        const ecLevel = opts.qrOptions.errorCorrectionLevel;
+        const ecLabels = { L: 'Low (7%)', M: 'Medium (15%)', Q: 'Quartile (25%)', H: 'High (30%)' };
+        const dotStyle = document.getElementById('dot-style').value;
+        const dotColor = document.getElementById('dot-color').value;
+        const bgColor = document.getElementById('bg-color').value;
+        const cornerSame = document.getElementById('corner-same').checked;
+        const cornerColor = cornerSame ? dotColor : document.getElementById('corner-color').value;
+        const hasLogo = !!centerImageData;
+        const logoSizeVal = parseFloat(document.getElementById('image-size').value);
+        const logoSizeLabels = { 0.2: 'XS', 0.3: 'S', 0.4: 'M', 0.5: 'L' };
+        const logoLabel = logoSizeLabels[logoSizeVal] || (Math.round(logoSizeVal * 100) + '%');
+        const quietZone = parseInt(document.getElementById('quiet-zone').value) || 0;
+        const scanInfo = hasLogo ? getLogoScanInfo(logoSizeVal) : null;
+        const url = document.getElementById('qr-url').value;
+        const version = getQRVersion(url.length, ecLevel);
+        const modules = getModuleCount(version);
+        const minInches = getMinPrintInches(version);
+
         // Build a high-res QR for printing
-        const printQR = new QRCodeStyling(getQROptions());
+        const printQR = new QRCodeStyling(opts);
         const tempDiv = document.createElement('div');
         printQR.append(tempDiv);
 
@@ -1787,6 +1911,26 @@
             if (!canvas) { showToast('Error generating print preview'); return; }
             const dataUrl = canvas.toDataURL('image/png');
 
+            // Build settings summary
+            var td1 = 'padding:2px 8px 2px 0;font-weight:600;white-space:nowrap;';
+            var td2 = 'padding:2px 0;';
+            var settingsHtml = '<table style="margin-top:0.2in;font-size:8pt;color:#555;border-collapse:collapse;text-align:left;">';
+            settingsHtml += '<tr><td style="' + td1 + '">URL</td><td style="' + td2 + 'word-break:break-all;max-width:4in;">' + url + ' (' + url.length + ' chars)</td></tr>';
+            settingsHtml += '<tr><td style="' + td1 + '">QR Version</td><td style="' + td2 + '">Version ' + version + ' (' + modules + '&times;' + modules + ' modules) &mdash; min print: ' + minInches.toFixed(1) + '&Prime;</td></tr>';
+            settingsHtml += '<tr><td style="' + td1 + '">Error Correction</td><td style="' + td2 + '">' + ecLabels[ecLevel] + '</td></tr>';
+            settingsHtml += '<tr><td style="' + td1 + '">Dot Style</td><td style="' + td2 + '">' + dotStyle + '</td></tr>';
+            settingsHtml += '<tr><td style="' + td1 + '">Colors</td><td style="' + td2 + '">Dots: ' + dotColor + ' &bull; BG: ' + bgColor + (cornerSame ? '' : ' &bull; Corners: ' + cornerColor) + '</td></tr>';
+            settingsHtml += '<tr><td style="' + td1 + '">Logo</td><td style="' + td2 + '">' + (hasLogo ? logoLabel + ' &mdash; covers ' + scanInfo.coveragePct + '% of area' : 'None') + '</td></tr>';
+            if (scanInfo) {
+                var scanColor = scanInfo.level === 'good' ? '#059669' : scanInfo.level === 'ok' ? '#B45309' : '#DC2626';
+                settingsHtml += '<tr><td style="' + td1 + '">Scan Confidence</td><td style="' + td2 + 'color:' + scanColor + ';font-weight:600;">' + scanInfo.msg + '</td></tr>';
+            }
+            if (inches < minInches) {
+                settingsHtml += '<tr><td style="' + td1 + 'color:#DC2626;">WARNING</td><td style="' + td2 + 'color:#DC2626;font-weight:600;">Print size (' + inches.toFixed(1) + '&Prime;) is below minimum (' + minInches.toFixed(1) + '&Prime;) for this URL + EC combo</td></tr>';
+            }
+            settingsHtml += '<tr><td style="' + td1 + '">Quiet Zone</td><td style="' + td2 + '">' + quietZone + 'px</td></tr>';
+            settingsHtml += '</table>';
+
             const printWin = window.open('', '_blank');
             printWin.document.write('<!DOCTYPE html><html><head><title>Print: ' + name + '</title><style>' +
                 '@page { margin: 0.5in; }' +
@@ -1794,6 +1938,7 @@
                 '.print-qr { width: ' + inches + 'in; height: ' + inches + 'in; }' +
                 '.print-qr img { width: 100%; height: 100%; image-rendering: pixelated; }' +
                 '.info { margin-top: 0.25in; font-size: 9pt; color: #666; text-align: center; }' +
+                '.settings { display: flex; justify-content: center; }' +
                 '.ruler { margin-top: 0.25in; width: ' + inches + 'in; height: 0.2in; border: 1px solid #ccc; position: relative; display: flex; }' +
                 '.ruler-inch { flex: 1; border-right: 1px solid #ccc; position: relative; }' +
                 '.ruler-inch:last-child { border-right: none; }' +
@@ -1806,6 +1951,7 @@
                 '<div class="print-qr"><img src="' + dataUrl + '" alt="QR Code"></div>' +
                 '<div class="ruler">' + Array.from({length: Math.max(1, Math.round(inches))}, (_,i) => '<div class="ruler-inch" data-n="' + (i+1) + '&Prime;"></div>').join('') + '</div>' +
                 '<div class="info">' + name + ' &mdash; ' + inches + '&Prime; &times; ' + inches + '&Prime; at 300 DPI (' + size + 'px)</div>' +
+                '<div class="settings">' + settingsHtml + '</div>' +
                 '</body></html>');
             printWin.document.close();
         }, 300);
@@ -1962,7 +2108,7 @@
         };
         if (c.centerImage) {
             opts.image = c.centerImage;
-            opts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.9, hideBackgroundDots: true };
+            opts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.3, hideBackgroundDots: true };
         }
         const dlQR = new QRCodeStyling(opts);
         dlQR.download({ name: c.name || 'mitratech-qr', extension: format });
@@ -2070,7 +2216,7 @@
             };
             if (c.centerImage) {
                 thumbOpts.image = c.centerImage;
-                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.9, hideBackgroundDots: true };
+                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 2, imageSize: parseFloat(c.imageSize) || 0.3, hideBackgroundDots: true };
             }
             new QRCodeStyling(thumbOpts).append(thumb);
 
