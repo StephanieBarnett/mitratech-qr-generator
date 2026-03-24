@@ -762,6 +762,59 @@
 
         .btn-danger:hover { background: var(--orange); color: white; }
 
+        .search-bar {
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.55rem 0.75rem 0.55rem 2.2rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            outline: none;
+            background: #FAFBFC;
+            transition: border-color 0.2s;
+        }
+
+        .search-bar input:focus {
+            border-color: var(--cobalt);
+            background: white;
+        }
+
+        .search-bar .search-icon {
+            position: absolute;
+            left: 0.7rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-dim);
+            pointer-events: none;
+        }
+
+        .saved-card-name-editable {
+            font-weight: 700;
+            font-size: 0.85rem;
+            border: none;
+            background: transparent;
+            text-align: center;
+            width: 100%;
+            padding: 0.15rem 0.25rem;
+            border-radius: 4px;
+            outline: none;
+            color: var(--navy);
+            transition: background 0.15s;
+        }
+
+        .saved-card-name-editable:hover {
+            background: var(--bg-light);
+        }
+
+        .saved-card-name-editable:focus {
+            background: white;
+            box-shadow: 0 0 0 2px rgba(0,103,210,0.2);
+        }
+
         .saved-empty {
             text-align: center;
             padding: 3rem 2rem;
@@ -829,6 +882,78 @@
 
         .panel-body { padding: 1.25rem; }
 
+        /* Style templates */
+        .template-bar {
+            display: flex;
+            gap: 0.4rem;
+            align-items: flex-start;
+        }
+
+        .template-list {
+            display: flex;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            flex: 1;
+        }
+
+        .template-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.6rem;
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--navy);
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .template-chip:hover {
+            border-color: var(--cobalt);
+            background: #EFF6FF;
+        }
+
+        .template-chip.active {
+            border-color: var(--cobalt);
+            background: #EFF6FF;
+            color: var(--cobalt);
+        }
+
+        .template-chip .chip-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .template-chip .chip-delete {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            color: var(--text-dim);
+            font-size: 0.6rem;
+            padding: 0;
+            margin-left: 0.1rem;
+            line-height: 1;
+            transition: all 0.15s;
+        }
+
+        .template-chip .chip-delete:hover {
+            background: var(--orange);
+            color: white;
+        }
+
         footer {
             text-align: center;
             padding: 2.5rem 1rem;
@@ -865,7 +990,7 @@
                 <label>QR Code Name</label>
                 <input type="text" id="qr-name" placeholder="my-qr-code" value="mitratech-qr">
             </div>
-            <div class="field" style="margin-bottom:0;">
+            <div class="field">
                 <label>Center Image (optional)</label>
                 <div class="image-upload-area" id="image-upload-area">
                     <input type="file" id="center-image" accept="image/*">
@@ -876,6 +1001,16 @@
                 </div>
                 <div class="size-presets" id="image-size-presets" style="margin-top:0.5rem;"></div>
                 <input type="hidden" id="image-size" value="0.4">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+                <label>Style Template</label>
+                <div class="template-bar">
+                    <div class="template-list" id="template-list"></div>
+                    <button class="btn btn-outline btn-sm" onclick="saveStyleTemplate()" title="Save current style as template" style="white-space:nowrap;">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                        Save Style
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -1086,6 +1221,12 @@
                     <input type="file" accept=".json" onchange="importSaved(event)" style="display:none;">
                 </label>
                 <button class="btn btn-danger btn-sm" onclick="clearAllSaved()">Clear All</button>
+            </div>
+        </div>
+        <div style="padding:0 1.5rem;">
+            <div class="search-bar">
+                <svg class="search-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="saved-search" placeholder="Search saved QR codes..." oninput="renderSavedGrid()">
             </div>
         </div>
         <div id="saved-grid" class="saved-grid"></div>
@@ -1311,6 +1452,109 @@
     }
     document.getElementById('qr-url').addEventListener('input', updateUrlHint);
     updateUrlHint();
+
+    // ---- Style Templates ----
+    const TEMPLATE_KEY = 'mitratech_qr_templates';
+    const builtinTemplates = [
+        { id: '_classic', name: 'Classic', builtin: true, style: { dotColor: '#000000', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#000000', dotStyle: 'square', cornerSquareStyle: 'square', cornerDotStyle: 'square' } },
+        { id: '_rounded', name: 'Rounded', builtin: true, style: { dotColor: '#000000', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#000000', dotStyle: 'dots', cornerSquareStyle: 'dot', cornerDotStyle: 'dot' } },
+        { id: '_navy', name: 'Navy', builtin: true, style: { dotColor: '#001949', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#001949', dotStyle: 'square', cornerSquareStyle: 'square', cornerDotStyle: 'square' } },
+        { id: '_brand_round', name: 'Navy Round', builtin: true, style: { dotColor: '#001949', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#001949', dotStyle: 'dots', cornerSquareStyle: 'dot', cornerDotStyle: 'dot' } },
+        { id: '_cobalt_classy', name: 'Cobalt Classy', builtin: true, style: { dotColor: '#0067D2', bgColor: '#FFFFFF', cornerSame: true, cornerColor: '#0067D2', dotStyle: 'classy-rounded', cornerSquareStyle: 'extra-rounded', cornerDotStyle: 'dot' } },
+    ];
+
+    function getCustomTemplates() {
+        try { return JSON.parse(localStorage.getItem(TEMPLATE_KEY)) || []; }
+        catch { return []; }
+    }
+
+    function setCustomTemplates(t) { localStorage.setItem(TEMPLATE_KEY, JSON.stringify(t)); }
+
+    function getAllTemplates() { return [...builtinTemplates, ...getCustomTemplates()]; }
+
+    function applyTemplate(t) {
+        const s = t.style;
+        document.getElementById('dot-color').value = s.dotColor;
+        document.getElementById('dot-color-hex').textContent = s.dotColor.toUpperCase();
+        document.getElementById('bg-color').value = s.bgColor;
+        document.getElementById('bg-color-hex').textContent = s.bgColor.toUpperCase();
+        document.getElementById('corner-same').checked = s.cornerSame !== false;
+        document.getElementById('corner-color').value = s.cornerColor || s.dotColor;
+        document.getElementById('corner-color-hex').textContent = (s.cornerColor || s.dotColor).toUpperCase();
+        document.getElementById('corner-color-section').style.display = s.cornerSame !== false ? 'none' : 'block';
+        document.getElementById('dot-style').value = s.dotStyle || 'square';
+        document.getElementById('corner-square-style').value = s.cornerSquareStyle || 'square';
+        document.getElementById('corner-dot-style').value = s.cornerDotStyle || 'square';
+        // Sync visual style grids
+        syncStyleGrids();
+        document.querySelectorAll('.swatch.active').forEach(sw => sw.classList.remove('active'));
+        generateQR();
+        renderTemplates(t.id);
+        showToast('Applied: ' + t.name);
+    }
+
+    function syncStyleGrids() {
+        [['dot-style-grid','dot-style', dotStyleIcons], ['corner-square-style-grid','corner-square-style', cornerSquareIcons], ['corner-dot-style-grid','corner-dot-style', cornerDotIcons]].forEach(([gridId, selId, icons]) => {
+            const val = document.getElementById(selId).value;
+            const keys = Object.keys(icons);
+            document.getElementById(gridId).querySelectorAll('.style-option').forEach((o,i) => o.classList.toggle('active', keys[i] === val));
+        });
+    }
+
+    function saveStyleTemplate() {
+        const name = prompt('Template name:');
+        if (!name || !name.trim()) return;
+        const customs = getCustomTemplates();
+        customs.push({
+            id: 'c_' + Date.now().toString(36),
+            name: name.trim(),
+            style: {
+                dotColor: document.getElementById('dot-color').value,
+                bgColor: document.getElementById('bg-color').value,
+                cornerSame: document.getElementById('corner-same').checked,
+                cornerColor: document.getElementById('corner-color').value,
+                dotStyle: document.getElementById('dot-style').value,
+                cornerSquareStyle: document.getElementById('corner-square-style').value,
+                cornerDotStyle: document.getElementById('corner-dot-style').value,
+            }
+        });
+        setCustomTemplates(customs);
+        renderTemplates();
+        showToast('Template saved: ' + name.trim());
+    }
+
+    function deleteTemplate(id) {
+        setCustomTemplates(getCustomTemplates().filter(t => t.id !== id));
+        renderTemplates();
+        showToast('Template removed');
+    }
+
+    function renderTemplates(activeId) {
+        const container = document.getElementById('template-list');
+        container.innerHTML = '';
+        getAllTemplates().forEach(t => {
+            const chip = document.createElement('div');
+            chip.className = 'template-chip' + (t.id === activeId ? ' active' : '');
+            const dot = document.createElement('span');
+            dot.className = 'chip-dot';
+            dot.style.background = t.style.dotColor;
+            chip.appendChild(dot);
+            const label = document.createTextNode(t.name);
+            chip.appendChild(label);
+            chip.addEventListener('click', (e) => { if (!e.target.classList.contains('chip-delete')) applyTemplate(t); });
+            if (!t.builtin) {
+                const del = document.createElement('button');
+                del.className = 'chip-delete';
+                del.innerHTML = '&times;';
+                del.title = 'Delete template';
+                del.onclick = (e) => { e.stopPropagation(); deleteTemplate(t.id); };
+                chip.appendChild(del);
+            }
+            container.appendChild(chip);
+        });
+    }
+
+    renderTemplates('_classic');
 
     // ---- Summary badges ----
     function updateSummary() {
@@ -1565,13 +1809,25 @@
     }
 
     function renderSavedGrid() {
-        const saved = getSaved();
+        const allSaved = getSaved();
         const grid = document.getElementById('saved-grid');
         const countEl = document.getElementById('saved-count');
-        if (countEl) countEl.textContent = saved.length;
+        if (countEl) countEl.textContent = allSaved.length;
+
+        const searchEl = document.getElementById('saved-search');
+        const query = (searchEl ? searchEl.value : '').toLowerCase().trim();
+        const saved = query ? allSaved.filter(e => {
+            const c = e.config;
+            return (c.name || '').toLowerCase().includes(query) || (c.url || '').toLowerCase().includes(query);
+        }) : allSaved;
+
+        if (allSaved.length === 0) {
+            grid.innerHTML = '<div class="saved-empty"><div class="saved-empty-icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg></div>No saved QR codes yet.<br>Generate one and click <strong>Save</strong>.</div>';
+            return;
+        }
 
         if (saved.length === 0) {
-            grid.innerHTML = '<div class="saved-empty"><div class="saved-empty-icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg></div>No saved QR codes yet.<br>Generate one and click <strong>Save</strong>.</div>';
+            grid.innerHTML = '<div class="saved-empty">No results for &ldquo;' + query.replace(/</g,'&lt;') + '&rdquo;</div>';
             return;
         }
 
@@ -1592,25 +1848,42 @@
                 backgroundOptions: { color: c.bgColor || '#FFFFFF' },
                 cornersSquareOptions: { color: cc, type: c.cornerSquareStyle || 'square' },
                 cornersDotOptions: { color: cc, type: c.cornerDotStyle || 'square' },
-                qrOptions: { errorCorrectionLevel: c.errorCorrection || 'M' },
+                qrOptions: { errorCorrectionLevel: c.errorCorrection || 'H' },
             };
             if (c.centerImage) {
                 thumbOpts.image = c.centerImage;
-                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 5, imageSize: parseFloat(c.imageSize) || 0.3 };
+                thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 10, imageSize: parseFloat(c.imageSize) || 0.4 };
             }
             new QRCodeStyling(thumbOpts).append(thumb);
 
             const info = document.createElement('div');
             info.className = 'saved-card-info';
-            info.innerHTML = '<div class="saved-card-name">' + (c.name || 'Untitled').replace(/</g,'&lt;') + '</div>'
-                + '<div class="saved-card-url" title="' + (c.url || '').replace(/"/g,'&quot;') + '">' + (c.url || '').replace(/</g,'&lt;') + '</div>'
-                + '<div class="saved-card-date">' + new Date(entry.savedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</div>'
-                + '<div class="saved-card-actions"></div>';
 
-            card.appendChild(thumb);
-            card.appendChild(info);
+            // Editable name
+            const nameInput = document.createElement('input');
+            nameInput.className = 'saved-card-name-editable';
+            nameInput.value = c.name || 'Untitled';
+            nameInput.title = 'Click to rename';
+            nameInput.addEventListener('change', () => {
+                const all = getSaved();
+                const item = all.find(e => e.id === entry.id);
+                if (item) { item.config.name = nameInput.value.trim() || 'Untitled'; setSaved(all); showToast('Renamed'); }
+            });
+            info.appendChild(nameInput);
 
-            const actions = info.querySelector('.saved-card-actions');
+            const urlDiv = document.createElement('div');
+            urlDiv.className = 'saved-card-url';
+            urlDiv.textContent = c.url || '';
+            urlDiv.title = c.url || '';
+            info.appendChild(urlDiv);
+
+            const dateDiv = document.createElement('div');
+            dateDiv.className = 'saved-card-date';
+            dateDiv.textContent = new Date(entry.savedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            info.appendChild(dateDiv);
+
+            const actions = document.createElement('div');
+            actions.className = 'saved-card-actions';
             const loadBtn = document.createElement('button');
             loadBtn.className = 'btn btn-primary btn-sm';
             loadBtn.textContent = 'Load';
@@ -1621,7 +1894,10 @@
             delBtn.onclick = () => deleteSavedQR(entry.id);
             actions.appendChild(loadBtn);
             actions.appendChild(delBtn);
+            info.appendChild(actions);
 
+            card.appendChild(thumb);
+            card.appendChild(info);
             grid.appendChild(card);
         });
     }
