@@ -1149,11 +1149,11 @@
                 </button>
                 <div class="section-body">
                     <div class="field">
-                        <label>PNG Print Size</label>
+                        <label>PNG Export Size (for web/email only)</label>
                         <div class="size-presets" id="print-size-presets"></div>
                         <input type="hidden" id="qr-size" value="900">
                         <div style="font-size:0.7rem;color:var(--text-dim);margin-top:0.35rem;">
-                            At 300 DPI. SVG exports scale to any size automatically.
+                            Only affects PNG downloads. SVG is vector and scales infinitely in Illustrator.
                         </div>
                     </div>
                     <div class="field">
@@ -1190,24 +1190,25 @@
                 <label style="font-size:0.7rem;text-align:center;">Filename</label>
                 <input type="text" id="qr-name-preview" value="mitratech-qr" placeholder="my-qr-code" style="text-align:center;font-size:0.85rem;padding:0.5rem 0.75rem;">
             </div>
+            <button class="btn btn-primary" onclick="downloadQR('svg')" style="width:100%;" title="Vector — scales to any size in Illustrator">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                Download SVG for Illustrator
+            </button>
+            <div style="font-size:0.68rem;color:var(--text-dim);text-align:center;margin:0.4rem 0;">Vector format — scales to any print size with no quality loss</div>
             <div class="download-actions">
-                <button class="btn btn-primary" onclick="downloadQR('svg')" title="Vector format — best for print at any size">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    SVG
+                <button class="btn btn-outline btn-sm" onclick="downloadQR('png')" title="Raster — for web, email, or presentations">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    PNG (Web/Email)
                 </button>
-                <button class="btn btn-secondary" onclick="downloadQR('png')" title="Raster format — for web and email">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                    PNG
+                <button class="btn btn-outline btn-sm" onclick="testPrint()" title="Print at exact physical size to verify">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                    Test Print
                 </button>
-                <button class="btn btn-save" onclick="saveCurrentQR()">
-                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                <button class="btn btn-save btn-sm" onclick="saveCurrentQR()">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                     Save
                 </button>
             </div>
-            <button class="btn btn-outline" onclick="testPrint()" style="width:100%;margin-top:0.5rem;" title="Print at exact physical size">
-                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                Test Print at Exact Size
-            </button>
         </div>
     </div>
 </div>
