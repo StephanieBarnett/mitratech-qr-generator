@@ -19,6 +19,16 @@
             --light-orange: #FF8D1D;
             --cobalt: #0067D2;
             --bg-light: #F2F7FD;
+            --bg-card: #FFFFFF;
+            --border: #E2E8F0;
+            --border-hover: #CBD5E1;
+            --text-muted: #64748B;
+            --text-dim: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,25,73,0.04), 0 1px 4px rgba(0,25,73,0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0,25,73,0.07), 0 2px 4px -2px rgba(0,25,73,0.05);
+            --shadow-lg: 0 10px 15px -3px rgba(0,25,73,0.08), 0 4px 6px -4px rgba(0,25,73,0.04);
+            --radius: 12px;
+            --radius-sm: 8px;
         }
 
         body {
@@ -28,31 +38,71 @@
             min-height: 100vh;
         }
 
+        /* ---- Header ---- */
         header {
-            background: var(--navy);
+            background: linear-gradient(135deg, var(--navy) 0%, #002366 50%, var(--cobalt) 100%);
             color: white;
-            padding: 1.5rem 2rem;
+            padding: 2rem 2.5rem;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 1.25rem;
+            position: relative;
+            overflow: hidden;
         }
 
-        header svg { flex-shrink: 0; }
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(10,191,220,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: -60%;
+            left: 20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(99,45,138,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .header-logo {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
 
         header h1 {
-            font-size: 1.4rem;
-            font-weight: 600;
-            letter-spacing: -0.01em;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            position: relative;
         }
 
         header p {
-            font-size: 0.85rem;
-            opacity: 0.7;
-            margin-top: 0.2rem;
+            font-size: 0.875rem;
+            opacity: 0.65;
+            margin-top: 0.25rem;
+            font-weight: 400;
+            position: relative;
         }
 
+        /* ---- Layout ---- */
         .container {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1.5rem;
             display: grid;
@@ -61,96 +111,169 @@
             align-items: start;
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 850px) {
             .container { grid-template-columns: 1fr; }
         }
 
+        /* ---- Panels ---- */
         .panel {
-            background: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,25,73,0.08);
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 0;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+            overflow: hidden;
         }
 
-        .panel h2 {
-            font-size: 1rem;
+        .panel-body { padding: 1.5rem; }
+
+        /* ---- Section accordion ---- */
+        .section {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section:last-child { border-bottom: none; }
+
+        .section-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-bottom: 1.25rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid var(--bg-light);
+            color: var(--navy);
+            text-align: left;
+            transition: background 0.15s;
         }
 
-        .field { margin-bottom: 1.25rem; }
+        .section-toggle:hover { background: var(--bg-light); }
+
+        .section-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .section-icon svg { width: 16px; height: 16px; }
+
+        .section-icon.blue { background: #E0F4F9; color: var(--light-blue); }
+        .section-icon.purple { background: #F0E6F6; color: var(--purple); }
+        .section-icon.orange { background: #FEF0E6; color: var(--light-orange); }
+        .section-icon.green { background: #E6F5EC; color: #10B981; }
+        .section-icon.cobalt { background: #E6F0FB; color: var(--cobalt); }
+
+        .section-chevron {
+            margin-left: auto;
+            transition: transform 0.2s;
+            color: var(--text-dim);
+        }
+
+        .section.collapsed .section-chevron { transform: rotate(-90deg); }
+        .section.collapsed .section-body { display: none; }
+
+        .section-body { padding: 0 1.5rem 1.25rem; }
+
+        /* ---- Fields ---- */
+        .field { margin-bottom: 1rem; }
+        .field:last-child { margin-bottom: 0; }
 
         .field label {
             display: block;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #667;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
             margin-bottom: 0.4rem;
         }
 
         .field input[type="text"],
         .field input[type="url"] {
             width: 100%;
-            padding: 0.6rem 0.75rem;
-            border: 1.5px solid #dde;
-            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
             font-size: 0.95rem;
-            transition: border-color 0.15s;
+            transition: border-color 0.2s, box-shadow 0.2s;
             outline: none;
+            background: #FAFBFC;
         }
 
-        .field input:focus { border-color: var(--cobalt); }
+        .field input[type="text"]:focus,
+        .field input[type="url"]:focus {
+            border-color: var(--cobalt);
+            box-shadow: 0 0 0 3px rgba(0,103,210,0.1);
+            background: white;
+        }
 
         .field select {
             width: 100%;
-            padding: 0.6rem 0.75rem;
-            border: 1.5px solid #dde;
-            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
             font-size: 0.95rem;
-            background: white;
+            background: #FAFBFC;
             outline: none;
             cursor: pointer;
+            transition: border-color 0.2s;
         }
 
         .field select:focus { border-color: var(--cobalt); }
 
-        /* Color swatches */
+        /* ---- Color swatches ---- */
         .color-swatches {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             flex-wrap: wrap;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.6rem;
         }
 
         .swatch {
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            border: 2.5px solid transparent;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 3px solid transparent;
             cursor: pointer;
-            transition: border-color 0.15s, transform 0.1s;
+            transition: all 0.15s;
             position: relative;
+            box-shadow: inset 0 -2px 4px rgba(0,0,0,0.1);
         }
 
-        .swatch:hover { transform: scale(1.1); }
-        .swatch.active { border-color: var(--navy); }
+        .swatch:hover {
+            transform: scale(1.12);
+            box-shadow: inset 0 -2px 4px rgba(0,0,0,0.1), 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        .swatch.active {
+            border-color: var(--navy);
+            box-shadow: inset 0 -2px 4px rgba(0,0,0,0.1), 0 0 0 2px white, 0 0 0 4px var(--navy);
+        }
 
         .swatch::after {
             content: attr(data-label);
             position: absolute;
-            bottom: -18px;
+            bottom: calc(100% + 6px);
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.6rem;
+            font-size: 0.65rem;
+            font-weight: 600;
             white-space: nowrap;
-            color: #667;
+            color: white;
+            background: var(--navy);
+            padding: 3px 7px;
+            border-radius: 4px;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.15s;
+            z-index: 10;
         }
 
         .swatch:hover::after { opacity: 1; }
@@ -158,36 +281,95 @@
         .color-row {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.6rem;
         }
 
         .color-row input[type="color"] {
-            width: 36px;
-            height: 36px;
-            border: 1.5px solid #dde;
-            border-radius: 8px;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
             cursor: pointer;
-            padding: 2px;
+            padding: 3px;
+            transition: border-color 0.15s;
         }
+
+        .color-row input[type="color"]:hover { border-color: var(--cobalt); }
 
         .color-row span {
-            font-size: 0.8rem;
-            color: #667;
-            font-family: monospace;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            background: var(--bg-light);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
         }
 
-        /* Center image */
+        /* ---- Visual style picker ---- */
+        .style-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .style-option {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.6rem 0.25rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.15s;
+            background: #FAFBFC;
+        }
+
+        .style-option:hover {
+            border-color: var(--border-hover);
+            background: white;
+        }
+
+        .style-option.active {
+            border-color: var(--cobalt);
+            background: #EFF6FF;
+            box-shadow: 0 0 0 2px rgba(0,103,210,0.15);
+        }
+
+        .style-option svg { width: 36px; height: 36px; }
+
+        .style-option span {
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.1;
+        }
+
+        .style-option.active span { color: var(--cobalt); }
+
+        /* ---- Image upload ---- */
         .image-upload-area {
-            border: 2px dashed #dde;
-            border-radius: 8px;
-            padding: 1rem;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 1.5rem;
             text-align: center;
             cursor: pointer;
-            transition: border-color 0.15s;
+            transition: all 0.2s;
             position: relative;
+            background: #FAFBFC;
         }
 
-        .image-upload-area:hover { border-color: var(--cobalt); }
+        .image-upload-area:hover {
+            border-color: var(--cobalt);
+            background: #F0F7FF;
+        }
+
+        .image-upload-area.has-image {
+            border-style: solid;
+            border-color: var(--light-blue);
+            background: #F0FBFF;
+        }
 
         .image-upload-area input[type="file"] {
             position: absolute;
@@ -196,16 +378,33 @@
             cursor: pointer;
         }
 
+        .upload-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 0.5rem;
+            background: var(--bg-light);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+        }
+
         .image-upload-area p {
             font-size: 0.85rem;
-            color: #667;
+            color: var(--text-muted);
+        }
+
+        .image-upload-area p strong {
+            color: var(--cobalt);
         }
 
         .image-upload-area .preview-thumb {
-            max-width: 60px;
-            max-height: 60px;
-            border-radius: 4px;
-            margin-top: 0.5rem;
+            max-width: 70px;
+            max-height: 70px;
+            border-radius: 8px;
+            margin-top: 0.75rem;
+            box-shadow: var(--shadow-sm);
         }
 
         .clear-image-btn {
@@ -216,10 +415,12 @@
             cursor: pointer;
             border: none;
             background: none;
-            text-decoration: underline;
+            font-weight: 600;
         }
 
-        /* Range slider */
+        .clear-image-btn:hover { text-decoration: underline; }
+
+        /* ---- Range slider ---- */
         .range-row {
             display: flex;
             align-items: center;
@@ -229,104 +430,146 @@
         .range-row input[type="range"] {
             flex: 1;
             accent-color: var(--cobalt);
+            height: 6px;
         }
 
         .range-row .range-val {
-            font-size: 0.85rem;
-            font-family: monospace;
-            min-width: 2.5rem;
-            text-align: right;
+            font-size: 0.82rem;
+            font-family: 'SF Mono', Monaco, monospace;
+            min-width: 3rem;
+            text-align: center;
+            background: var(--bg-light);
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+            color: var(--navy);
+            font-weight: 600;
         }
 
-        /* Buttons */
+        /* ---- Buttons ---- */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
-            padding: 0.65rem 1.25rem;
+            padding: 0.7rem 1.25rem;
             border: none;
-            border-radius: 8px;
-            font-size: 0.9rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.15s, transform 0.1s;
+            transition: all 0.15s;
         }
 
         .btn:active { transform: scale(0.97); }
 
         .btn-primary {
-            background: var(--cobalt);
+            background: linear-gradient(135deg, var(--cobalt), #0057B8);
             color: white;
+            box-shadow: 0 2px 4px rgba(0,103,210,0.25);
         }
 
-        .btn-primary:hover { background: #0055b0; }
+        .btn-primary:hover {
+            box-shadow: 0 4px 8px rgba(0,103,210,0.35);
+            transform: translateY(-1px);
+        }
 
         .btn-secondary {
-            background: var(--navy);
+            background: linear-gradient(135deg, var(--navy), #002366);
             color: white;
+            box-shadow: 0 2px 4px rgba(0,25,73,0.25);
         }
 
-        .btn-secondary:hover { background: #00245e; }
+        .btn-secondary:hover {
+            box-shadow: 0 4px 8px rgba(0,25,73,0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, var(--light-blue), #08A8C2);
+            color: white;
+            box-shadow: 0 2px 4px rgba(10,191,220,0.3);
+        }
+
+        .btn-save:hover {
+            box-shadow: 0 4px 8px rgba(10,191,220,0.4);
+            transform: translateY(-1px);
+        }
 
         .btn-outline {
             background: white;
             color: var(--navy);
-            border: 1.5px solid #dde;
+            border: 1.5px solid var(--border);
         }
 
         .btn-outline:hover { border-color: var(--cobalt); color: var(--cobalt); }
 
-        .actions {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
-            margin-top: 1.5rem;
-        }
-
-        /* Preview panel */
+        /* ---- Preview panel ---- */
         .preview-panel { text-align: center; }
 
-        .preview-panel h2 { text-align: left; }
+        .preview-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
 
         #qr-preview {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 300px;
-            background: white;
-            border-radius: 8px;
-            border: 1.5px solid #eef;
-            margin-bottom: 1rem;
+            min-height: 320px;
+            margin: 1.5rem;
+            border-radius: var(--radius);
             padding: 1.5rem;
+            background-image:
+                linear-gradient(45deg, #f0f1f3 25%, transparent 25%),
+                linear-gradient(-45deg, #f0f1f3 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f0f1f3 75%),
+                linear-gradient(-45deg, transparent 75%, #f0f1f3 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
         }
 
         #qr-preview canvas, #qr-preview svg {
             max-width: 100%;
             height: auto;
+            border-radius: 4px;
         }
 
-        .download-actions {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: center;
-            flex-wrap: wrap;
+        .preview-actions {
+            padding: 0 1.5rem 1.5rem;
         }
 
         .filename-display {
             font-size: 0.8rem;
-            color: #667;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-family: 'SF Mono', Monaco, monospace;
+            background: var(--bg-light);
+            display: inline-block;
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .download-actions {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            flex-wrap: wrap;
             margin-bottom: 0.75rem;
         }
 
-        /* Section divider */
-        .section-divider {
+        .save-divider {
             border: none;
-            border-top: 1px solid #eef;
-            margin: 1.25rem 0;
+            border-top: 1px solid var(--border);
+            margin: 1rem 0;
         }
 
-        /* Checkbox row */
+        /* ---- Checkbox ---- */
         .checkbox-row {
             display: flex;
             align-items: center;
@@ -348,21 +591,12 @@
             margin-bottom: 0;
         }
 
-        footer {
-            text-align: center;
-            padding: 2rem;
-            font-size: 0.75rem;
-            color: #99a;
-        }
-
-        /* Saved QR Codes section */
+        /* ---- Saved section ---- */
         .saved-section {
-            max-width: 1100px;
+            max-width: 1200px;
             margin: 0 auto 2rem;
             padding: 0 1.5rem;
         }
-
-        .saved-section .panel { padding: 1.5rem; }
 
         .saved-header {
             display: flex;
@@ -370,36 +604,53 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 0.75rem;
-            margin-bottom: 1.25rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid var(--bg-light);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
         }
 
-        .saved-header h2 { margin: 0; padding: 0; border: none; }
+        .saved-header h2 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .saved-count {
+            background: var(--cobalt);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 700;
+        }
 
         .saved-header-actions {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         .saved-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 1rem;
+            padding: 1.5rem;
         }
 
         .saved-card {
-            border: 1.5px solid #eef;
-            border-radius: 10px;
-            padding: 1rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0;
             text-align: center;
-            transition: border-color 0.15s, box-shadow 0.15s;
-            position: relative;
+            transition: all 0.2s;
+            overflow: hidden;
+            background: white;
         }
 
         .saved-card:hover {
             border-color: var(--cobalt);
-            box-shadow: 0 2px 8px rgba(0,103,210,0.1);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
         }
 
         .saved-card-thumb {
@@ -408,45 +659,52 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #fafbfd;
-            border-radius: 6px;
-            margin-bottom: 0.75rem;
+            background-image:
+                linear-gradient(45deg, #f5f6f8 25%, transparent 25%),
+                linear-gradient(-45deg, #f5f6f8 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f5f6f8 75%),
+                linear-gradient(-45deg, transparent 75%, #f5f6f8 75%);
+            background-size: 12px 12px;
+            background-position: 0 0, 0 6px, 6px -6px, -6px 0px;
             overflow: hidden;
+            padding: 0.75rem;
         }
 
         .saved-card-thumb canvas { max-width: 100%; max-height: 100%; }
 
+        .saved-card-info { padding: 0.75rem; border-top: 1px solid var(--border); }
+
         .saved-card-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0.2rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 0.15rem;
             word-break: break-word;
         }
 
         .saved-card-url {
-            font-size: 0.75rem;
-            color: #667;
-            margin-bottom: 0.6rem;
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-bottom: 0.4rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
 
         .saved-card-date {
-            font-size: 0.65rem;
-            color: #99a;
-            margin-bottom: 0.6rem;
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
         }
 
         .saved-card-actions {
             display: flex;
-            gap: 0.4rem;
+            gap: 0.35rem;
             justify-content: center;
         }
 
         .btn-sm {
-            padding: 0.35rem 0.7rem;
-            font-size: 0.75rem;
+            padding: 0.3rem 0.65rem;
+            font-size: 0.72rem;
             border-radius: 6px;
         }
 
@@ -460,13 +718,24 @@
 
         .saved-empty {
             text-align: center;
-            padding: 2rem;
-            color: #99a;
+            padding: 3rem 2rem;
+            color: var(--text-dim);
             font-size: 0.9rem;
         }
 
-        .save-divider { margin: 1rem 0; }
+        .saved-empty-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.75rem;
+            background: var(--bg-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dim);
+        }
 
+        /* ---- Toast ---- */
         .toast {
             position: fixed;
             bottom: 2rem;
@@ -474,182 +743,240 @@
             background: var(--navy);
             color: white;
             padding: 0.75rem 1.25rem;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-size: 0.85rem;
             font-weight: 500;
             opacity: 0;
             transform: translateY(10px);
-            transition: opacity 0.2s, transform 0.2s;
+            transition: opacity 0.25s, transform 0.25s;
             z-index: 1000;
             pointer-events: none;
+            box-shadow: var(--shadow-lg);
         }
 
         .toast.show { opacity: 1; transform: translateY(0); }
+
+        footer {
+            text-align: center;
+            padding: 2.5rem 1rem;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-        <rect width="40" height="40" rx="8" fill="#0ABFDC"/>
-        <path d="M12 28L20 12L28 28H24L20 19L16 28H12Z" fill="white"/>
-    </svg>
+    <div class="header-logo">
+        <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+            <path d="M8 32L20 8L32 32H26L20 17L14 32H8Z" fill="white"/>
+        </svg>
+    </div>
     <div>
-        <h1>Mitratech QR Code Generator</h1>
-        <p>Generate branded QR codes in Mitratech colors</p>
+        <h1>QR Code Generator</h1>
+        <p>Create branded QR codes with Mitratech colors</p>
     </div>
 </header>
 
 <div class="container">
     <!-- Controls Panel -->
     <div class="panel">
-        <h2>Settings</h2>
-
-        <div class="field">
-            <label>URL</label>
-            <input type="url" id="qr-url" placeholder="https://www.mitratech.com" value="https://www.mitratech.com">
-        </div>
-
-        <div class="field">
-            <label>QR Code Name</label>
-            <input type="text" id="qr-name" placeholder="my-qr-code" value="mitratech-qr">
-        </div>
-
-        <hr class="section-divider">
-
-        <div class="field">
-            <label>Dot Color</label>
-            <div class="color-swatches" id="dot-color-swatches"></div>
-            <div class="color-row">
-                <input type="color" id="dot-color" value="#001949">
-                <span id="dot-color-hex">#001949</span>
-            </div>
-        </div>
-
-        <div class="field">
-            <label>Background Color</label>
-            <div class="color-swatches" id="bg-color-swatches"></div>
-            <div class="color-row">
-                <input type="color" id="bg-color" value="#FFFFFF">
-                <span id="bg-color-hex">#FFFFFF</span>
-            </div>
-        </div>
-
-        <div class="field">
-            <label>Corner Square Color</label>
-            <div class="checkbox-row" style="margin-bottom: 0.4rem;">
-                <input type="checkbox" id="corner-same" checked>
-                <label for="corner-same">Same as dot color</label>
-            </div>
-            <div id="corner-color-section" style="display:none;">
-                <div class="color-swatches" id="corner-color-swatches"></div>
-                <div class="color-row">
-                    <input type="color" id="corner-color" value="#001949">
-                    <span id="corner-color-hex">#001949</span>
+        <!-- Section 1: Basics (always open) -->
+        <div class="section" id="sec-basics">
+            <button class="section-toggle" onclick="toggleSection('sec-basics')">
+                <div class="section-icon blue">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101"/><path d="M10.172 13.828a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.102 1.101"/></svg>
+                </div>
+                URL & Name
+                <svg class="section-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="section-body">
+                <div class="field">
+                    <label>URL to encode</label>
+                    <input type="url" id="qr-url" placeholder="https://www.mitratech.com" value="https://www.mitratech.com">
+                </div>
+                <div class="field">
+                    <label>QR Code Name (for download)</label>
+                    <input type="text" id="qr-name" placeholder="my-qr-code" value="mitratech-qr">
                 </div>
             </div>
         </div>
 
-        <hr class="section-divider">
-
-        <div class="field">
-            <label>Dot Style</label>
-            <select id="dot-style">
-                <option value="square">Square (Classic)</option>
-                <option value="dots">Dots (Rounded)</option>
-                <option value="rounded">Rounded Square</option>
-                <option value="extra-rounded">Extra Rounded</option>
-                <option value="classy">Classy</option>
-                <option value="classy-rounded">Classy Rounded</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Corner Square Style</label>
-            <select id="corner-square-style">
-                <option value="square">Square</option>
-                <option value="dot">Rounded</option>
-                <option value="extra-rounded">Extra Rounded</option>
-            </select>
-        </div>
-
-        <div class="field">
-            <label>Corner Dot Style</label>
-            <select id="corner-dot-style">
-                <option value="square">Square</option>
-                <option value="dot">Rounded</option>
-            </select>
-        </div>
-
-        <hr class="section-divider">
-
-        <div class="field">
-            <label>Center Image (optional)</label>
-            <div class="image-upload-area" id="image-upload-area">
-                <input type="file" id="center-image" accept="image/*">
-                <p id="upload-label">Click or drag to upload a logo</p>
+        <!-- Section 2: Colors -->
+        <div class="section" id="sec-colors">
+            <button class="section-toggle" onclick="toggleSection('sec-colors')">
+                <div class="section-icon purple">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+                </div>
+                Colors
+                <svg class="section-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="section-body">
+                <div class="field">
+                    <label>QR Code Color</label>
+                    <div class="color-swatches" id="dot-color-swatches"></div>
+                    <div class="color-row">
+                        <input type="color" id="dot-color" value="#001949">
+                        <span id="dot-color-hex">#001949</span>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Background Color</label>
+                    <div class="color-swatches" id="bg-color-swatches"></div>
+                    <div class="color-row">
+                        <input type="color" id="bg-color" value="#FFFFFF">
+                        <span id="bg-color-hex">#FFFFFF</span>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Corner Color</label>
+                    <div class="checkbox-row" style="margin-bottom: 0.4rem;">
+                        <input type="checkbox" id="corner-same" checked>
+                        <label for="corner-same">Same as QR code color</label>
+                    </div>
+                    <div id="corner-color-section" style="display:none;">
+                        <div class="color-swatches" id="corner-color-swatches"></div>
+                        <div class="color-row">
+                            <input type="color" id="corner-color" value="#001949">
+                            <span id="corner-color-hex">#001949</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="field">
-            <label>Center Image Size</label>
-            <div class="range-row">
-                <input type="range" id="image-size" min="0.1" max="0.5" step="0.05" value="0.3">
-                <span class="range-val" id="image-size-val">0.3</span>
+        <!-- Section 3: Style -->
+        <div class="section" id="sec-style">
+            <button class="section-toggle" onclick="toggleSection('sec-style')">
+                <div class="section-icon orange">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="3.5"/></svg>
+                </div>
+                Dot & Corner Style
+                <svg class="section-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="section-body">
+                <div class="field">
+                    <label>Dot Shape</label>
+                    <div class="style-grid" id="dot-style-grid"></div>
+                    <select id="dot-style" style="display:none;">
+                        <option value="square">Square</option>
+                        <option value="dots">Dots</option>
+                        <option value="rounded">Rounded</option>
+                        <option value="extra-rounded">Extra Rounded</option>
+                        <option value="classy">Classy</option>
+                        <option value="classy-rounded">Classy Rounded</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Corner Square Shape</label>
+                    <div class="style-grid" id="corner-square-style-grid"></div>
+                    <select id="corner-square-style" style="display:none;">
+                        <option value="square">Square</option>
+                        <option value="dot">Rounded</option>
+                        <option value="extra-rounded">Extra Rounded</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Corner Dot Shape</label>
+                    <div class="style-grid" id="corner-dot-style-grid"></div>
+                    <select id="corner-dot-style" style="display:none;">
+                        <option value="square">Square</option>
+                        <option value="dot">Rounded</option>
+                    </select>
+                </div>
             </div>
         </div>
 
-        <div class="field">
-            <label>Image Margin (px)</label>
-            <div class="range-row">
-                <input type="range" id="image-margin" min="0" max="20" step="1" value="5">
-                <span class="range-val" id="image-margin-val">5</span>
+        <!-- Section 4: Center Image -->
+        <div class="section" id="sec-image">
+            <button class="section-toggle" onclick="toggleSection('sec-image')">
+                <div class="section-icon green">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                </div>
+                Center Image
+                <svg class="section-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="section-body">
+                <div class="field">
+                    <div class="image-upload-area" id="image-upload-area">
+                        <input type="file" id="center-image" accept="image/*">
+                        <div class="upload-icon">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <p id="upload-label"><strong>Click to upload</strong> or drag and drop</p>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Image Size</label>
+                    <div class="range-row">
+                        <input type="range" id="image-size" min="0.1" max="0.5" step="0.05" value="0.3">
+                        <span class="range-val" id="image-size-val">0.3</span>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Image Margin</label>
+                    <div class="range-row">
+                        <input type="range" id="image-margin" min="0" max="20" step="1" value="5">
+                        <span class="range-val" id="image-margin-val">5px</span>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <hr class="section-divider">
-
-        <div class="field">
-            <label>QR Code Size (px)</label>
-            <div class="range-row">
-                <input type="range" id="qr-size" min="200" max="1200" step="50" value="600">
-                <span class="range-val" id="qr-size-val">600</span>
+        <!-- Section 5: Advanced -->
+        <div class="section collapsed" id="sec-advanced">
+            <button class="section-toggle" onclick="toggleSection('sec-advanced')">
+                <div class="section-icon cobalt">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                </div>
+                Advanced Options
+                <svg class="section-chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="section-body">
+                <div class="field">
+                    <label>QR Code Size (px)</label>
+                    <div class="range-row">
+                        <input type="range" id="qr-size" min="200" max="1200" step="50" value="600">
+                        <span class="range-val" id="qr-size-val">600</span>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Error Correction</label>
+                    <select id="error-correction">
+                        <option value="L">Low (7%)</option>
+                        <option value="M" selected>Medium (15%)</option>
+                        <option value="Q">Quartile (25%)</option>
+                        <option value="H">High (30%) &mdash; Best for logos</option>
+                    </select>
+                </div>
             </div>
-        </div>
-
-        <div class="field">
-            <label>Error Correction</label>
-            <select id="error-correction">
-                <option value="L">Low (7%)</option>
-                <option value="M" selected>Medium (15%)</option>
-                <option value="Q">Quartile (25%)</option>
-                <option value="H">High (30%) - Best for logos</option>
-            </select>
         </div>
     </div>
 
     <!-- Preview Panel -->
-    <div class="panel preview-panel" style="position: sticky; top: 2rem;">
-        <h2>Preview</h2>
+    <div class="panel preview-panel" style="position: sticky; top: 1.5rem;">
+        <div class="preview-header">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+            Live Preview
+        </div>
         <div id="qr-preview"></div>
-        <div class="filename-display">
-            Filename: <strong id="filename-display">mitratech-qr.png</strong>
+        <div class="preview-actions">
+            <div class="filename-display" id="filename-display">mitratech-qr.png</div>
+            <div class="download-actions">
+                <button class="btn btn-primary" onclick="downloadQR('png')">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    PNG
+                </button>
+                <button class="btn btn-secondary" onclick="downloadQR('svg')">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                    SVG
+                </button>
+                <button class="btn btn-save" onclick="saveCurrentQR()">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    Save
+                </button>
+            </div>
         </div>
-        <div class="download-actions">
-            <button class="btn btn-primary" onclick="downloadQR('png')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                Download PNG
-            </button>
-            <button class="btn btn-secondary" onclick="downloadQR('svg')">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                Download SVG
-            </button>
-        </div>
-        <hr class="section-divider save-divider">
-        <button class="btn btn-outline" onclick="saveCurrentQR()" style="width:100%;">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Save to Library
-        </button>
     </div>
 </div>
 
@@ -657,11 +984,15 @@
 <div class="saved-section" id="saved-section">
     <div class="panel">
         <div class="saved-header">
-            <h2>Saved QR Codes</h2>
+            <h2>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+                Saved QR Codes
+                <span class="saved-count" id="saved-count">0</span>
+            </h2>
             <div class="saved-header-actions">
-                <button class="btn btn-outline btn-sm" onclick="exportSaved()">Export JSON</button>
+                <button class="btn btn-outline btn-sm" onclick="exportSaved()">Export</button>
                 <label class="btn btn-outline btn-sm" style="cursor:pointer;">
-                    Import JSON
+                    Import
                     <input type="file" accept=".json" onchange="importSaved(event)" style="display:none;">
                 </label>
                 <button class="btn btn-danger btn-sm" onclick="clearAllSaved()">Clear All</button>
@@ -678,7 +1009,7 @@
 </footer>
 
 <script>
-    // Mitratech brand colors
+    // ---- Mitratech brand colors ----
     const brandColors = [
         { hex: '#001949', label: 'Navy' },
         { hex: '#0ABFDC', label: 'Light Blue' },
@@ -692,9 +1023,9 @@
 
     const bgColors = [
         { hex: '#FFFFFF', label: 'White' },
-        { hex: '#F2F7FD', label: 'Light Blue BG' },
-        { hex: '#EAFCFF', label: 'Aqua BG' },
-        { hex: '#F9FAFC', label: 'Light Gray BG' },
+        { hex: '#F2F7FD', label: 'Ice Blue' },
+        { hex: '#EAFCFF', label: 'Aqua' },
+        { hex: '#F9FAFC', label: 'Snow' },
         { hex: '#0ABFDC', label: 'Light Blue' },
         { hex: '#001949', label: 'Navy' },
     ];
@@ -702,7 +1033,55 @@
     let qrCode = null;
     let centerImageData = null;
 
-    // Build swatches
+    // ---- Section toggle ----
+    function toggleSection(id) {
+        document.getElementById(id).classList.toggle('collapsed');
+    }
+
+    // ---- Visual style picker SVGs ----
+    const dotStyleIcons = {
+        'square': '<svg viewBox="0 0 36 36"><rect x="2" y="2" width="8" height="8" fill="currentColor"/><rect x="14" y="2" width="8" height="8" fill="currentColor"/><rect x="26" y="2" width="8" height="8" fill="currentColor"/><rect x="2" y="14" width="8" height="8" fill="currentColor"/><rect x="14" y="14" width="8" height="8" fill="currentColor"/><rect x="26" y="14" width="8" height="8" fill="currentColor"/><rect x="2" y="26" width="8" height="8" fill="currentColor"/><rect x="14" y="26" width="8" height="8" fill="currentColor"/><rect x="26" y="26" width="8" height="8" fill="currentColor"/></svg>',
+        'dots': '<svg viewBox="0 0 36 36"><circle cx="6" cy="6" r="4" fill="currentColor"/><circle cx="18" cy="6" r="4" fill="currentColor"/><circle cx="30" cy="6" r="4" fill="currentColor"/><circle cx="6" cy="18" r="4" fill="currentColor"/><circle cx="18" cy="18" r="4" fill="currentColor"/><circle cx="30" cy="18" r="4" fill="currentColor"/><circle cx="6" cy="30" r="4" fill="currentColor"/><circle cx="18" cy="30" r="4" fill="currentColor"/><circle cx="30" cy="30" r="4" fill="currentColor"/></svg>',
+        'rounded': '<svg viewBox="0 0 36 36"><rect x="2" y="2" width="8" height="8" rx="2" fill="currentColor"/><rect x="14" y="2" width="8" height="8" rx="2" fill="currentColor"/><rect x="26" y="2" width="8" height="8" rx="2" fill="currentColor"/><rect x="2" y="14" width="8" height="8" rx="2" fill="currentColor"/><rect x="14" y="14" width="8" height="8" rx="2" fill="currentColor"/><rect x="26" y="14" width="8" height="8" rx="2" fill="currentColor"/><rect x="2" y="26" width="8" height="8" rx="2" fill="currentColor"/><rect x="14" y="26" width="8" height="8" rx="2" fill="currentColor"/><rect x="26" y="26" width="8" height="8" rx="2" fill="currentColor"/></svg>',
+        'extra-rounded': '<svg viewBox="0 0 36 36"><rect x="2" y="2" width="8" height="8" rx="4" fill="currentColor"/><rect x="14" y="2" width="8" height="8" rx="4" fill="currentColor"/><rect x="26" y="2" width="8" height="8" rx="4" fill="currentColor"/><rect x="2" y="14" width="8" height="8" rx="4" fill="currentColor"/><rect x="14" y="14" width="8" height="8" rx="2" fill="currentColor"/><rect x="26" y="14" width="8" height="8" rx="4" fill="currentColor"/><rect x="2" y="26" width="8" height="8" rx="4" fill="currentColor"/><rect x="14" y="26" width="8" height="8" rx="4" fill="currentColor"/><rect x="26" y="26" width="8" height="8" rx="2" fill="currentColor"/></svg>',
+        'classy': '<svg viewBox="0 0 36 36"><rect x="2" y="2" width="8" height="8" fill="currentColor"/><rect x="14" y="2" width="8" height="8" rx="0" fill="currentColor" transform="rotate(45 18 6)"/><rect x="2" y="14" width="8" height="8" fill="currentColor"/><rect x="14" y="14" width="8" height="8" fill="currentColor"/><rect x="26" y="14" width="8" height="8" fill="currentColor"/><rect x="26" y="26" width="8" height="8" fill="currentColor"/></svg>',
+        'classy-rounded': '<svg viewBox="0 0 36 36"><rect x="2" y="2" width="8" height="8" rx="2" fill="currentColor"/><rect x="14" y="2" width="8" height="8" rx="4" fill="currentColor"/><rect x="26" y="2" width="8" height="8" rx="2" fill="currentColor"/><rect x="2" y="14" width="8" height="8" rx="4" fill="currentColor"/><rect x="14" y="14" width="8" height="8" rx="2" fill="currentColor"/><rect x="26" y="14" width="8" height="8" rx="4" fill="currentColor"/><rect x="2" y="26" width="8" height="8" rx="2" fill="currentColor"/><rect x="14" y="26" width="8" height="8" rx="4" fill="currentColor"/><rect x="26" y="26" width="8" height="8" rx="2" fill="currentColor"/></svg>',
+    };
+
+    const cornerSquareIcons = {
+        'square': '<svg viewBox="0 0 36 36"><rect x="2" y="2" width="32" height="32" rx="0" stroke="currentColor" stroke-width="5" fill="none"/><rect x="11" y="11" width="14" height="14" fill="currentColor"/></svg>',
+        'dot': '<svg viewBox="0 0 36 36"><rect x="2" y="2" width="32" height="32" rx="6" stroke="currentColor" stroke-width="5" fill="none"/><rect x="11" y="11" width="14" height="14" rx="3" fill="currentColor"/></svg>',
+        'extra-rounded': '<svg viewBox="0 0 36 36"><rect x="2" y="2" width="32" height="32" rx="12" stroke="currentColor" stroke-width="5" fill="none"/><rect x="11" y="11" width="14" height="14" rx="7" fill="currentColor"/></svg>',
+    };
+
+    const cornerDotIcons = {
+        'square': '<svg viewBox="0 0 36 36"><rect x="6" y="6" width="24" height="24" fill="currentColor"/></svg>',
+        'dot': '<svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="currentColor"/></svg>',
+    };
+
+    function buildStyleGrid(gridId, selectId, icons) {
+        const grid = document.getElementById(gridId);
+        const select = document.getElementById(selectId);
+        const labels = { 'square': 'Square', 'dots': 'Dots', 'rounded': 'Rounded', 'extra-rounded': 'Extra Round', 'classy': 'Classy', 'classy-rounded': 'Classy Round', 'dot': 'Rounded' };
+        Object.keys(icons).forEach(value => {
+            const opt = document.createElement('div');
+            opt.className = 'style-option' + (select.value === value ? ' active' : '');
+            opt.innerHTML = icons[value] + '<span>' + (labels[value] || value) + '</span>';
+            opt.addEventListener('click', () => {
+                select.value = value;
+                grid.querySelectorAll('.style-option').forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                generateQR();
+            });
+            grid.appendChild(opt);
+        });
+    }
+
+    buildStyleGrid('dot-style-grid', 'dot-style', dotStyleIcons);
+    buildStyleGrid('corner-square-style-grid', 'corner-square-style', cornerSquareIcons);
+    buildStyleGrid('corner-dot-style-grid', 'corner-dot-style', cornerDotIcons);
+
+    // ---- Build color swatches ----
     function buildSwatches(containerId, colors, inputId, hexDisplayId) {
         const container = document.getElementById(containerId);
         colors.forEach(c => {
@@ -710,9 +1089,7 @@
             s.className = 'swatch';
             s.style.background = c.hex;
             s.setAttribute('data-label', c.label);
-            if (c.hex === '#FFFFFF') {
-                s.style.border = '2px solid #dde';
-            }
+            if (c.hex === '#FFFFFF') s.style.border = '3px solid #E2E8F0';
             s.addEventListener('click', () => {
                 document.getElementById(inputId).value = c.hex;
                 document.getElementById(hexDisplayId).textContent = c.hex;
@@ -728,13 +1105,12 @@
     buildSwatches('bg-color-swatches', bgColors, 'bg-color', 'bg-color-hex');
     buildSwatches('corner-color-swatches', brandColors, 'corner-color', 'corner-color-hex');
 
-    // Color inputs sync
+    // ---- Color inputs sync ----
     ['dot', 'bg', 'corner'].forEach(prefix => {
         const input = document.getElementById(prefix + '-color');
         const hex = document.getElementById(prefix + '-color-hex');
         input.addEventListener('input', () => {
             hex.textContent = input.value.toUpperCase();
-            // Clear active swatch
             const container = document.getElementById(prefix + '-color-swatches');
             if (container) container.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
             generateQR();
@@ -747,7 +1123,7 @@
         generateQR();
     });
 
-    // Center image upload
+    // ---- Center image upload ----
     document.getElementById('center-image').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -755,26 +1131,25 @@
         reader.onload = function(ev) {
             centerImageData = ev.target.result;
             const area = document.getElementById('image-upload-area');
-            document.getElementById('upload-label').textContent = file.name;
-            // Remove old preview/button
+            area.classList.add('has-image');
+            document.getElementById('upload-label').innerHTML = '<strong>' + file.name + '</strong>';
             const oldImg = area.querySelector('.preview-thumb');
             if (oldImg) oldImg.remove();
             const oldBtn = area.querySelector('.clear-image-btn');
             if (oldBtn) oldBtn.remove();
-            // Add preview
             const img = document.createElement('img');
             img.src = centerImageData;
             img.className = 'preview-thumb';
             area.appendChild(img);
-            // Add clear button
             const btn = document.createElement('button');
             btn.className = 'clear-image-btn';
             btn.textContent = 'Remove image';
             btn.onclick = function(ev) {
                 ev.stopPropagation();
                 centerImageData = null;
+                area.classList.remove('has-image');
                 document.getElementById('center-image').value = '';
-                document.getElementById('upload-label').textContent = 'Click or drag to upload a logo';
+                document.getElementById('upload-label').innerHTML = '<strong>Click to upload</strong> or drag and drop';
                 img.remove();
                 btn.remove();
                 generateQR();
@@ -785,30 +1160,30 @@
         reader.readAsDataURL(file);
     });
 
-    // Range sliders
+    // ---- Range sliders ----
     ['image-size', 'image-margin', 'qr-size'].forEach(id => {
         const input = document.getElementById(id);
         const val = document.getElementById(id + '-val');
         input.addEventListener('input', () => {
-            val.textContent = input.value;
+            val.textContent = id === 'image-margin' ? input.value + 'px' : input.value;
             generateQR();
         });
     });
 
-    // All other inputs
+    // ---- Other inputs ----
     ['qr-url', 'qr-name', 'dot-style', 'corner-square-style', 'corner-dot-style', 'error-correction'].forEach(id => {
         document.getElementById(id).addEventListener('input', generateQR);
         document.getElementById(id).addEventListener('change', generateQR);
     });
 
-    // Update filename display
+    // ---- Filename display ----
     function updateFilename() {
         const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
         document.getElementById('filename-display').textContent = name + '.png';
     }
     document.getElementById('qr-name').addEventListener('input', updateFilename);
 
-    // Generate QR code
+    // ---- Generate QR code ----
     let debounceTimer = null;
     function generateQR() {
         clearTimeout(debounceTimer);
@@ -833,37 +1208,17 @@
         preview.innerHTML = '';
 
         const options = {
-            width: size,
-            height: size,
-            type: 'canvas',
-            data: url,
-            dotsOptions: {
-                color: dotColor,
-                type: dotStyle,
-            },
-            backgroundOptions: {
-                color: bgColor,
-            },
-            cornersSquareOptions: {
-                color: cornerColor,
-                type: cornerSquareStyle,
-            },
-            cornersDotOptions: {
-                color: cornerColor,
-                type: cornerDotStyle,
-            },
-            qrOptions: {
-                errorCorrectionLevel: errorCorrection,
-            },
+            width: size, height: size, type: 'canvas', data: url,
+            dotsOptions: { color: dotColor, type: dotStyle },
+            backgroundOptions: { color: bgColor },
+            cornersSquareOptions: { color: cornerColor, type: cornerSquareStyle },
+            cornersDotOptions: { color: cornerColor, type: cornerDotStyle },
+            qrOptions: { errorCorrectionLevel: errorCorrection },
         };
 
         if (centerImageData) {
             options.image = centerImageData;
-            options.imageOptions = {
-                crossOrigin: 'anonymous',
-                margin: imageMargin,
-                imageSize: imageSize,
-            };
+            options.imageOptions = { crossOrigin: 'anonymous', margin: imageMargin, imageSize: imageSize };
         }
 
         qrCode = new QRCodeStyling(options);
@@ -871,7 +1226,7 @@
         updateFilename();
     }
 
-    // Download
+    // ---- Download ----
     function downloadQR(format) {
         if (!qrCode) return;
         const name = document.getElementById('qr-name').value.trim() || 'mitratech-qr';
@@ -882,9 +1237,8 @@
     const STORAGE_KEY = 'mitratech_qr_saved';
 
     function getSaved() {
-        try {
-            return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-        } catch { return []; }
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+        catch { return []; }
     }
 
     function setSaved(items) {
@@ -930,7 +1284,19 @@
         document.getElementById('image-size').value = config.imageSize || '0.3';
         document.getElementById('image-size-val').textContent = config.imageSize || '0.3';
         document.getElementById('image-margin').value = config.imageMargin || '5';
-        document.getElementById('image-margin-val').textContent = config.imageMargin || '5';
+        document.getElementById('image-margin-val').textContent = (config.imageMargin || '5') + 'px';
+
+        // Sync visual style pickers
+        ['dot-style-grid', 'corner-square-style-grid', 'corner-dot-style-grid'].forEach(gridId => {
+            const grid = document.getElementById(gridId);
+            if (!grid) return;
+            const selectId = gridId.replace('-grid', '');
+            const val = document.getElementById(selectId).value;
+            grid.querySelectorAll('.style-option').forEach((opt, i) => {
+                const keys = Object.keys(gridId.includes('dot-style') && !gridId.includes('corner') ? dotStyleIcons : gridId.includes('corner-square') ? cornerSquareIcons : cornerDotIcons);
+                opt.classList.toggle('active', keys[i] === val);
+            });
+        });
 
         // Handle center image
         centerImageData = config.centerImage || null;
@@ -942,7 +1308,8 @@
         document.getElementById('center-image').value = '';
 
         if (centerImageData) {
-            document.getElementById('upload-label').textContent = 'Saved image loaded';
+            area.classList.add('has-image');
+            document.getElementById('upload-label').innerHTML = '<strong>Saved image loaded</strong>';
             const img = document.createElement('img');
             img.src = centerImageData;
             img.className = 'preview-thumb';
@@ -953,20 +1320,20 @@
             btn.onclick = function(ev) {
                 ev.stopPropagation();
                 centerImageData = null;
+                area.classList.remove('has-image');
                 document.getElementById('center-image').value = '';
-                document.getElementById('upload-label').textContent = 'Click or drag to upload a logo';
+                document.getElementById('upload-label').innerHTML = '<strong>Click to upload</strong> or drag and drop';
                 img.remove();
                 btn.remove();
                 generateQR();
             };
             area.appendChild(btn);
         } else {
-            document.getElementById('upload-label').textContent = 'Click or drag to upload a logo';
+            area.classList.remove('has-image');
+            document.getElementById('upload-label').innerHTML = '<strong>Click to upload</strong> or drag and drop';
         }
 
-        // Clear all active swatches
         document.querySelectorAll('.swatch.active').forEach(s => s.classList.remove('active'));
-
         generateQR();
     }
 
@@ -974,12 +1341,11 @@
         const config = getCurrentConfig();
         if (!config.url) { showToast('Please enter a URL first'); return; }
         const saved = getSaved();
-        const entry = {
+        saved.unshift({
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
             savedAt: new Date().toISOString(),
             config: config,
-        };
-        saved.unshift(entry);
+        });
         setSaved(saved);
         renderSavedGrid();
         showToast('QR code saved to library');
@@ -995,8 +1361,7 @@
     }
 
     function deleteSavedQR(id) {
-        const saved = getSaved().filter(e => e.id !== id);
-        setSaved(saved);
+        setSaved(getSaved().filter(e => e.id !== id));
         renderSavedGrid();
         showToast('QR code removed');
     }
@@ -1027,22 +1392,17 @@
         reader.onload = function(ev) {
             try {
                 const imported = JSON.parse(ev.target.result);
-                if (!Array.isArray(imported)) throw new Error('Invalid format');
+                if (!Array.isArray(imported)) throw new Error('Invalid');
                 const existing = getSaved();
-                const existingIds = new Set(existing.map(e => e.id));
+                const ids = new Set(existing.map(e => e.id));
                 let added = 0;
                 imported.forEach(entry => {
-                    if (entry.id && entry.config && !existingIds.has(entry.id)) {
-                        existing.push(entry);
-                        added++;
-                    }
+                    if (entry.id && entry.config && !ids.has(entry.id)) { existing.push(entry); added++; }
                 });
                 setSaved(existing);
                 renderSavedGrid();
                 showToast('Imported ' + added + ' new QR code(s)');
-            } catch {
-                showToast('Invalid JSON file');
-            }
+            } catch { showToast('Invalid JSON file'); }
         };
         reader.readAsText(file);
         event.target.value = '';
@@ -1051,10 +1411,11 @@
     function renderSavedGrid() {
         const saved = getSaved();
         const grid = document.getElementById('saved-grid');
-        const section = document.getElementById('saved-section');
+        const countEl = document.getElementById('saved-count');
+        if (countEl) countEl.textContent = saved.length;
 
         if (saved.length === 0) {
-            grid.innerHTML = '<div class="saved-empty">No saved QR codes yet. Generate one and click "Save to Library".</div>';
+            grid.innerHTML = '<div class="saved-empty"><div class="saved-empty-icon"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg></div>No saved QR codes yet.<br>Generate one and click <strong>Save</strong>.</div>';
             return;
         }
 
@@ -1066,58 +1427,45 @@
             const thumb = document.createElement('div');
             thumb.className = 'saved-card-thumb';
 
-            // Render a mini QR preview
             const c = entry.config;
+            const cc = c.cornerSame !== false ? (c.dotColor || '#001949') : (c.cornerColor || '#001949');
             const thumbOpts = {
-                width: 180, height: 180, type: 'canvas',
+                width: 160, height: 160, type: 'canvas',
                 data: c.url || 'https://mitratech.com',
                 dotsOptions: { color: c.dotColor || '#001949', type: c.dotStyle || 'square' },
                 backgroundOptions: { color: c.bgColor || '#FFFFFF' },
-                cornersSquareOptions: { color: c.cornerSame !== false ? (c.dotColor || '#001949') : (c.cornerColor || '#001949'), type: c.cornerSquareStyle || 'square' },
-                cornersDotOptions: { color: c.cornerSame !== false ? (c.dotColor || '#001949') : (c.cornerColor || '#001949'), type: c.cornerDotStyle || 'square' },
+                cornersSquareOptions: { color: cc, type: c.cornerSquareStyle || 'square' },
+                cornersDotOptions: { color: cc, type: c.cornerDotStyle || 'square' },
                 qrOptions: { errorCorrectionLevel: c.errorCorrection || 'M' },
             };
             if (c.centerImage) {
                 thumbOpts.image = c.centerImage;
                 thumbOpts.imageOptions = { crossOrigin: 'anonymous', margin: parseInt(c.imageMargin) || 5, imageSize: parseFloat(c.imageSize) || 0.3 };
             }
-            const thumbQR = new QRCodeStyling(thumbOpts);
-            thumbQR.append(thumb);
+            new QRCodeStyling(thumbOpts).append(thumb);
 
-            const name = document.createElement('div');
-            name.className = 'saved-card-name';
-            name.textContent = c.name || 'Untitled';
+            const info = document.createElement('div');
+            info.className = 'saved-card-info';
+            info.innerHTML = '<div class="saved-card-name">' + (c.name || 'Untitled').replace(/</g,'&lt;') + '</div>'
+                + '<div class="saved-card-url" title="' + (c.url || '').replace(/"/g,'&quot;') + '">' + (c.url || '').replace(/</g,'&lt;') + '</div>'
+                + '<div class="saved-card-date">' + new Date(entry.savedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</div>'
+                + '<div class="saved-card-actions"></div>';
 
-            const url = document.createElement('div');
-            url.className = 'saved-card-url';
-            url.textContent = c.url || '';
-            url.title = c.url || '';
+            card.appendChild(thumb);
+            card.appendChild(info);
 
-            const date = document.createElement('div');
-            date.className = 'saved-card-date';
-            date.textContent = new Date(entry.savedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-            const actions = document.createElement('div');
-            actions.className = 'saved-card-actions';
-
+            const actions = info.querySelector('.saved-card-actions');
             const loadBtn = document.createElement('button');
             loadBtn.className = 'btn btn-primary btn-sm';
             loadBtn.textContent = 'Load';
             loadBtn.onclick = () => loadSavedQR(entry.id);
-
             const delBtn = document.createElement('button');
             delBtn.className = 'btn btn-danger btn-sm';
             delBtn.textContent = 'Delete';
             delBtn.onclick = () => deleteSavedQR(entry.id);
-
             actions.appendChild(loadBtn);
             actions.appendChild(delBtn);
 
-            card.appendChild(thumb);
-            card.appendChild(name);
-            card.appendChild(url);
-            card.appendChild(date);
-            card.appendChild(actions);
             grid.appendChild(card);
         });
     }
@@ -1130,14 +1478,13 @@
         t._timer = setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    // Initial render
+    // ---- Init ----
     generateQR();
     renderSavedGrid();
 
-    // Set initial active swatch for dot color (Navy)
+    // Set initial active swatches
     const dotSwatches = document.getElementById('dot-color-swatches').querySelectorAll('.swatch');
     if (dotSwatches.length > 0) dotSwatches[0].classList.add('active');
-    // Set initial active swatch for bg color (White)
     const bgSwatches = document.getElementById('bg-color-swatches').querySelectorAll('.swatch');
     if (bgSwatches.length > 0) bgSwatches[0].classList.add('active');
 </script>
